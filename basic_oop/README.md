@@ -1,7 +1,5 @@
 # Praktik Object-Oriented Programming (OOP) dalam JavaScript
 
-## Gambaran Umum
-
 Pembelajaran ini mengimplementasikan konsep-konsep fundamental Object-Oriented Programming dalam JavaScript, meliputi:
 
 - **Kelas dan Objek**
@@ -9,7 +7,6 @@ Pembelajaran ini mengimplementasikan konsep-konsep fundamental Object-Oriented P
 - **Enkapsulasi (Encapsulation)**
 - **Polimorfisme (Polymorphism)**
 
-## Struktur Proyek
 
 ### Kelas Dasar: Animal
 
