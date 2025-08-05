@@ -12,7 +12,7 @@ class Student extends Person {
       this._attendance = new Map();
       this._parentContact = parentContact || {};
       this._academicStatus = 'active';
-
+      this._achievements = [];
    }
 
    _generateStudentId() {
@@ -35,6 +35,7 @@ class Student extends Person {
    get enrolledCourses() { return Array.from(this._enrolledCourses.values()); }
    get parentContact() { return { ...this._parentContact }; }
    get academicStatus() { return this._academicStatus; }
+   get achievements() { return [...this._achievements]; }
 
    //Setters
    set gradeLevel(newGradeLevel) {
@@ -61,7 +62,7 @@ class Student extends Person {
       return `${this._name} - Grade Level ${this._gradeLevel} (${this.studentId})`;
    }
 
-   enrollIncourse(course) {
+   enrollInCourse(course) {
       if (this._enrolledCourses.has(course.id)) {
          throw new Error(`Already enroller in course: ${course.name}`);
       }
@@ -117,6 +118,21 @@ class Student extends Person {
       return gradeEntry;
    }
 
+   addAchievement(title, description, date, category = 'academic') {
+      const achievement = {
+         id: this._generateId,
+         title: title,
+         description: description || 'No description provided',
+         date: new Date(date),
+         category: category,
+         createdAt: new Date(),
+      }
+
+      this._achievements.push(achievement);
+      this._updateTimestamp();
+      return achievement;
+   }
+
    getGradesForCourse(courseId) {
       return this._grades.get(courseId);
    }
@@ -134,7 +150,7 @@ class Student extends Person {
       return percentage;
    }
 
-   markAttendace(courseId, date, status) {
+   markAttendance(courseId, date, status) {
       if (!this._enrolledCourses.has(courseId)) {
          throw new Error("Not enrolled in this course");
       }
