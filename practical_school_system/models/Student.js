@@ -1,0 +1,175 @@
+import Person from './Person';
+
+class Student extends Person {
+   constructor(name, email, phone, address, birthDate, gradeLevel, parentContact) {
+      super(name, email, phone, address, birthDate);
+
+      this._role = "High School";
+      this._studenId = this._generateStudentId();
+      this._gradeLevel = this._validateAndSetGrade(gradeLevel);
+      this._enrolledCourses = new Map();
+      this._grades = new Map();
+      this._attendance = new Map();
+      this._parentContact = parentContact || {};
+      this._academicStatus = 'active';
+
+   }
+
+   _generateStudentId() {
+      const year = new Date().getFullYear();
+      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(10, '1')
+      return `STD-${year}${randomNumber}`;
+   }
+
+   _validateAndSetGrade(gradeLevel) {
+      const validGradeLevel = ['10', '11', '12'];
+      if (!validGradeLevel.includes(gradeLevel.toString())) {
+         throw new Error("Invalid grade level, Must be between 10-12");
+      }
+      return gradeLevel.toString();
+   }
+
+   //Getters
+   get studentId() { return this._studentId; }
+   get gradeLevel() { return this._gradeLevel; }
+   get enrolledCourses() { return Array.from(this._enrolledCourses.values()); }
+   get parentContact() { return { ...this._parentContact }; }
+   get academicStatus() { return this._academicStatus; }
+
+   //Setters
+   set gradeLevel(newGradeLevel) {
+      this._gradeLevel = this._validateAndSetGrade(newGradeLevel);
+      this._updateTimestamp();
+   }
+
+   set parentContact(newContact) {
+      this._parentContact = { ...newContact };
+      this._updateTimestamp();
+   }
+
+   set academicStatus(status) {
+      const validStatus = ['active', 'suspended', 'graduated', 'transferred'];
+      if (!validStatus.includes(status)) {
+         throw new Error("Invalid academic status");
+      }
+      this._academicStatus = status;
+      this._updateTimestamp();
+   }
+
+   //Override Parent method - Polymorphism
+   getDisplayInfo() {
+      return `${this._name} - Grade Level ${this._gradeLevel} (${this.studentId})`;
+   }
+
+   enrollIncourse(course) {
+      if (this._enrolledCourses.has(course.id)) {
+         throw new Error(`Already enroller in course: ${course.name}`);
+      }
+
+      if (this._academicStatus !== 'active') {
+         throw new Error(`Can't enroll: academic status is ${this._academicStatus}`);
+      }
+
+      this._enrolledCourses.set(course.id, {
+         course: course,
+         enrolledAt: new Date(),
+         status: 'active',
+      })
+
+      //Initialize collection for this course
+      this._grades.set(course.id, []);
+      this._attendance.set(course.id, []);
+
+      this._updateTimestamp();
+      return true;
+   }
+
+   dropCourse(courseId) {
+      if (!this._enrolledCourses.has(courseId)) {
+         throw new Error("Not enrolled in this course");
+      }
+
+      const enrollment = this._enrolledCourses.get(courseId);
+      enrollment.status = 'dropped';
+      enrollment.droppedAt = new Date();
+
+      this._updateTimestamp();
+      return true;
+   }
+
+   addGrade(courseId, gradeData) {
+      if (!this._enrolledCourses.has(courseId)) {
+         throw new Error("Not enrolled in this course");
+      }
+
+      const courseGrades = this._grades.get(courseId);
+      const gradeEntry = {
+         type: gradeData.type || 'assignment',
+         title: gradeData.title || 'Untitled',
+         score: gradeData.score || 0,
+         maxScore: gradeData.maxScore || 100,
+         data: gradeData.date || new Date(),
+         recordedAt: new Date(),
+      }
+
+      courseGrades.push(gradeEntry);
+      this._updateTimestamp();
+      return gradeEntry;
+   }
+
+   getGradesForCourse(courseId) {
+      return this._grades.get(courseId);
+   }
+
+   calculateCourseGPA(courseId) {
+      const grades = this.getGradesForCourse(courseId);
+      if (grades.length === 0) return 0;
+
+      let percentage = 0;
+
+      grades.forEach(grade => {
+         percentage = (grade.score / grade.maxScore) * 100;
+      });
+
+      return percentage;
+   }
+
+   markAttendace(courseId, date, status) {
+      if (!this._enrolledCourses.has(courseId)) {
+         throw new Error("Not enrolled in this course");
+      }
+
+      const validStatus = ['present', 'absent', 'sick',];
+      if (!validStatus.includes(status)) {
+         throw new Error("Invalid attendance status");
+      }
+
+      const attendance = this._attendance.get(courseId);
+      attendance.push({
+         date: new Date(date),
+         status: status,
+         recordedAt: new Date(),
+      });
+
+      this._updateTimestamp();
+      return true;
+   }
+
+   getAcademicSummary() {
+      return {
+         studentInfo: this.getDisplayInfo(),
+         enrolledCourses: this.enrolledCourses.length,
+         academicStatus: this._academicStatus,
+         courses: this.enrolledCourses.map(enroll => ({
+            courseName: enroll.course.name,
+            courseCode: enroll.course.code,
+            courseGPA: this.calculateCourseGPA(enroll.course.id),
+            status: enroll.status
+         }))
+      };
+   }
+
+   //Menambahkan Achivements
+}
+
+export default Student;
