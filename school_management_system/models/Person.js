@@ -22,7 +22,6 @@ class Person {
    _validateInput(name, email, phone) {
       if (!name || name.trim().length < 2) {
          throw new Error("Name must be at least 2 characters");
-
       }
 
       const checkEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,9 +29,8 @@ class Person {
          throw new Error("Invalid email format");
       }
 
-      if (!phone || phone.length < 13) {
-         throw new Error("Phone number must be at least 12 digits");
-
+      if (!phone || phone.length !== 12) {
+         throw new Error("Phone number must be exactly 12 digits");
       }
    }
 

@@ -1,11 +1,11 @@
-import Person from './Person';
+import Person from './Person.js';
 
 class Student extends Person {
    constructor(name, email, phone, address, birthDate, gradeLevel, parentContact) {
       super(name, email, phone, address, birthDate);
 
       this._role = "High School";
-      this._studenId = this._generateStudentId();
+      this._id = this._generateId();
       this._gradeLevel = this._validateAndSetGrade(gradeLevel);
       this._enrolledCourses = new Map();
       this._grades = new Map();
@@ -15,7 +15,7 @@ class Student extends Person {
       this._achievements = [];
    }
 
-   _generateStudentId() {
+   _generateId() {
       const year = new Date().getFullYear();
       const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(10, '1')
       return `STD-${year}${randomNumber}`;
@@ -30,7 +30,7 @@ class Student extends Person {
    }
 
    //Getters
-   get studentId() { return this._studentId; }
+   get id() { return this._id; }
    get gradeLevel() { return this._gradeLevel; }
    get enrolledCourses() { return Array.from(this._enrolledCourses.values()); }
    get parentContact() { return { ...this._parentContact }; }
@@ -59,7 +59,7 @@ class Student extends Person {
 
    //Override Parent method - Polymorphism
    getDisplayInfo() {
-      return `${this._name} - Grade Level ${this._gradeLevel} (${this.studentId})`;
+      return `${this._name} - Grade Level ${this._gradeLevel} (${this._id})`;
    }
 
    enrollInCourse(course) {
@@ -109,7 +109,7 @@ class Student extends Person {
          title: gradeData.title || 'Untitled',
          score: gradeData.score || 0,
          maxScore: gradeData.maxScore || 100,
-         data: gradeData.date || new Date(),
+         date: gradeData.date || new Date(),
          recordedAt: new Date(),
       }
 
@@ -120,7 +120,7 @@ class Student extends Person {
 
    addAchievement(title, description, date, category = 'academic') {
       const achievement = {
-         id: this._generateId,
+         id: this._generateId(),
          title: title,
          description: description || 'No description provided',
          date: new Date(date),
@@ -141,13 +141,12 @@ class Student extends Person {
       const grades = this.getGradesForCourse(courseId);
       if (grades.length === 0) return 0;
 
-      let percentage = 0;
-
+      let totalPercentage = 0;
       grades.forEach(grade => {
-         percentage = (grade.score / grade.maxScore) * 100;
+         totalPercentage += (grade.score / grade.maxScore) * 100;
       });
 
-      return percentage;
+      return totalPercentage / grades.length;
    }
 
    markAttendance(courseId, date, status) {
@@ -185,7 +184,6 @@ class Student extends Person {
       };
    }
 
-   //Menambahkan Achivements
 }
 
 export default Student;
