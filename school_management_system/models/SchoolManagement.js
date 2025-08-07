@@ -22,66 +22,6 @@ class SchoolManagement {
       console.log(`📅 Academic Year: ${this._systemConfig.academicYear}`);
    }
 
-   // Helper method untuk notifications
-   // _addNotification(message) {
-   //    this._notifications.push({
-   //       id: Date.now().toString(36) + Math.random().toString(36).substring(2),
-   //       message: message,
-   //       timestamp: new Date(),
-   //       read: false
-   //    });
-   // }
-
-   // Student management
-   // addStudent(studentData) {
-   //    try {
-   //       let student = new Student(
-   //          studentData.name,
-   //          studentData.email,
-   //          studentData.phone,
-   //          studentData.address,
-   //          studentData.birthDate,
-   //          studentData.grade,
-   //          studentData.parentContact
-   //       );
-
-   //       this._students.set(student.id, student);
-   //       // this._addNotification(`Student added: ${student.getDisplayInfo()}`);
-   //       console.log(`\n\n✅ Student added: ${student.getDisplayInfo()}`);
-   //       return student;
-
-   //    } catch (error) {
-   //       console.error(`❌ Failed to add student: ${error.message}`);
-   //       throw error;
-   //    }
-   // }
-
-   // Teacher management
-   addTeacher(teacherData) {
-      try {
-         let teacher = new Teacher(
-            teacherData.name,
-            teacherData.email,
-            teacherData.phone,
-            teacherData.address,
-            teacherData.birthDate,
-            teacherData.department,
-            teacherData.subjects,
-            teacherData.assignedClasses,
-            teacherData.qualifications
-         );
-
-         this._teachers.set(teacher.id, teacher);
-         // this._addNotification(`Teacher added: ${teacher.getDisplayInfo()}`);
-         console.log(`\n\n✅ Teacher added: ${teacher.getDisplayInfo()}`);
-         return teacher;
-
-      } catch (error) {
-         console.error(`❌ Failed to add teacher: ${error.message}`);
-         throw error;
-      }
-   }
-
    // Course management
    createCourse(courseData) {
       try {
@@ -137,10 +77,10 @@ class SchoolManagement {
 
    // Getter methods
    // getStudent(studentId) { return this._students.get(studentId); }
-   getTeacher(teacherId) { return this._teachers.get(teacherId); }
+   // getTeacher(teacherId) { return this._teachers.get(teacherId); }
    getCourse(courseId) { return this._courses.get(courseId); }
    // getAllStudents() { return Array.from(this._students.values()); }
-   getAllTeachers() { return Array.from(this._teachers.values()); }
+   // getAllTeachers() { return Array.from(this._teachers.values()); }
    getAllCourses() { return Array.from(this._courses.values()); }
    // getNotifications() { return [...this._notifications]; }
 

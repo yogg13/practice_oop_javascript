@@ -1,15 +1,14 @@
 import Person from "./Person.js";
 
 class Teacher extends Person {
-   constructor(name, email, phone, address, birthDate, department, subjects, assignedClasses, qualifications = []) {
+   constructor(name, email, phone, address, birthDate, department, subjects, assignedClasses) {
       super(name, email, phone, address, birthDate);
 
       this._role = 'Teacher';
       this._id = this._generateId();
       this._department = department;
       this._subjects = Array.isArray(subjects) ? subjects : [subjects];
-      this._qualifications = qualifications;
-      this._assignedCourses = new Map();
+      this._assignedCourses = new Map() || 'N/A';
       this._assignedClasses = assignedClasses || 'N/A';
       this._hireDate = new Date();
       this._employmentStatus = 'active'; // active, on_leave, terminated
@@ -19,7 +18,6 @@ class Teacher extends Person {
    get id() { return this._id; }
    get department() { return this._department; }
    get subjects() { return [...this._subjects]; }
-   get qualifications() { return [...this._qualifications]; }
    get assignedClasses() { return this._assignedClasses; }
    get assignedCourses() { return Array.from(this._assignedCourses.values()); }
    get hireDate() { return new Date(this._hireDate); }
@@ -57,12 +55,14 @@ class Teacher extends Person {
    }
 
    // Teacher-specific methods
-   addSubject(subject) {
+   addOrUpdateSubject(subject) {
       if (!this._subjects.includes(subject)) {
          this._subjects.push(subject);
          this._updateTimestamp();
          return true;
       }
+      // If subject already exists, do not add again
+      // console.log(chalk.red(`Subject ${subject} already exists for this teacher.`));
       return false;
    }
 
@@ -116,31 +116,31 @@ class Teacher extends Person {
       return true;
    }
 
-   addQualification(qualification) {
-      const qualificationEntry = {
-         id: this._generateId(),
-         ...qualification,
-         addedAt: new Date()
-      };
+   // addQualification(qualification) {
+   //    const qualificationEntry = {
+   //       id: this._generateId(),
+   //       ...qualification,
+   //       addedAt: new Date()
+   //    };
 
-      this._qualifications.push(qualificationEntry);
-      this._updateTimestamp();
-      return qualificationEntry;
-   }
+   //    this._qualifications.push(qualificationEntry);
+   //    this._updateTimestamp();
+   //    return qualificationEntry;
+   // }
 
-   updateQualification(qualificationId, updatedData) {
-      const index = this._qualifications.findIndex(q => q.id === qualificationId);
-      if (index === -1) {
-         throw new Error("Qualification not found");
-      }
-      this._qualifications[index] = {
-         ...this._qualifications[index],
-         ...updatedData,
-      };
+   // updateQualification(qualificationId, updatedData) {
+   //    const index = this._qualifications.findIndex(q => q.id === qualificationId);
+   //    if (index === -1) {
+   //       throw new Error("Qualification not found");
+   //    }
+   //    this._qualifications[index] = {
+   //       ...this._qualifications[index],
+   //       ...updatedData,
+   //    };
 
-      this._updateTimestamp();
-      return this._qualifications[index];
-   }
+   //    this._updateTimestamp();
+   //    return this._qualifications[index];
+   // }
 
    getTeachingLoad() {
       return Array.from(this._assignedCourses.values())
@@ -161,7 +161,6 @@ class Teacher extends Person {
             studentCount: assignment.course.studentCount || 0,
             assignedAt: assignment.assignedAt || 'N/A'
          })),
-         qualifications: this._qualifications || 'N/A',
          employmentStatus: this._employmentStatus
       }
    }

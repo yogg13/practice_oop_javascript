@@ -10,7 +10,6 @@ class StudentController {
    getStudentById(studentId) { return this._students.get(studentId); }
 
    addStudent(studentData) {
-      console.log("Student before add", studentData);
       try {
          let student = new Student(
             studentData.name,

@@ -70,33 +70,46 @@ class CLIView {
    }
 
    displayStudentList(students) {
+      console.log("All List Data Student", students);
       console.log(chalk.yellow('Student List:\n'));
-      console.log(chalk.cyan('ID'.padEnd(30) + 'Name'.padEnd(15) + 'Role'.padEnd(15) + 'Grade Level'.padEnd(15) + 'Status'.padEnd(10)));
-      console.log(chalk.yellow('-'.repeat(80)));
+      // console.log(chalk.cyan('ID'.padEnd(30) + 'Name'.padEnd(15) + 'Role'.padEnd(15) + 'Grade Level'.padEnd(15) + 'Status'.padEnd(10)));
+      console.log(chalk.yellow('-'.repeat(90)));
 
-      students.forEach(student => {
-         console.log(
-            student.id.padEnd(30) +
-            student.name.padEnd(15) +
-            student.role.padEnd(15) +
-            student.gradeLevel.padEnd(15) +
-            student.academicStatus.padEnd(10)
-         );
+      students.forEach((student) => {
+         console.table([
+            {
+               ID: student.id,
+               Name: student.name,
+               Role: student.role,
+               'Grade Level': student.gradeLevel,
+               Status: student.academicStatus,
+               'Enrolled Courses': student.enrolledCourses.map(course => course.name).join(', ') || 'N/A',
+               Attendance: student.attendance.size > 0 ? `${student.attendance.size} records` : 'N/A',
+               Achievements: student.achievements.length > 0 ? student.achievements.map(a => a.title).join(', ') : 'N/A',
+               GPA: student.getGradesForCourse() || 'N/A'
+            }
+         ]);
       });
    }
 
    displayTeacherList(teachers) {
       console.log(chalk.yellow('Teacher List:\n'));
-      console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Department'.padEnd(20) + 'Status'));
-      console.log(chalk.yellow('-'.repeat(70)));
+      // console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Department'.padEnd(20) + 'Status'));
+      console.log(chalk.yellow('-'.repeat(90)));
 
-      teachers.forEach(teacher => {
-         console.log(
-            teacher.id.padEnd(15) +
-            teacher.name.padEnd(30) +
-            teacher.department.padEnd(20) +
-            teacher.employmentStatus
-         );
+      teachers.forEach((teacher) => {
+         console.table([
+            {
+               ID: teacher.id,
+               Name: teacher.name,
+               Department: teacher.department,
+               Subjects: teacher.subjects.join(', '),
+               'Assigned Classes': teacher.assignedClasses,
+               'Assigned Courses': teacher.assignedCourses.map(course => course.name).join(', ') || 'N/A',
+               'Teaching Load': teacher.getTeachingLoad(),
+               Status: teacher.employmentStatus
+            }
+         ]);
       });
    }
 
@@ -111,6 +124,30 @@ class CLIView {
             course.name.padEnd(30) +
             course.code.padEnd(10) +
             course.studentCount.toString().padEnd(10) +
+            course.status
+         );
+      });
+   }
+
+   displayStudentReport(report) {
+      console.log(chalk.yellow('Student Report:\n'));
+      console.log(chalk.cyan('Student:'), report.student.name);
+      console.log(chalk.cyan('ID:'), report.student.id);
+      console.log(chalk.cyan('School:'), report.student.role);
+      console.log(chalk.cyan('Academic Status:'), report.academicSummary.academicStatus);
+      console.log(chalk.cyan('Academic Year:'), report.academicYear);
+      console.log(chalk.cyan('Report Date:'), report.generatedAt.toLocaleDateString());
+
+      // Display course summary
+      console.log(chalk.yellow('\nCourse Summary:'));
+      console.log(chalk.cyan('Course'.padEnd(30) + 'Code'.padEnd(15) + 'GPA'.padEnd(10) + 'Status'));
+      console.log('-'.repeat(60));
+
+      report.academicSummary.courses.forEach(course => {
+         console.log(
+            course.courseName.padEnd(30) +
+            course.courseCode.padEnd(15) +
+            course.courseGPA.toFixed(2).padEnd(10) +
             course.status
          );
       });
@@ -155,29 +192,25 @@ class CLIView {
       }
    }
 
-   displayStudentReport(report) {
-      console.log(chalk.yellow('Student Report:\n'));
-      console.log(chalk.cyan('Student:'), report.student.name);
-      console.log(chalk.cyan('ID:'), report.student.id);
-      console.log(chalk.cyan('School:'), report.student.role);
-      console.log(chalk.cyan('Academic Status:'), report.academicSummary.academicStatus);
-      console.log(chalk.cyan('Academic Year:'), report.academicYear);
-      console.log(chalk.cyan('Report Date:'), report.generatedAt.toLocaleDateString());
+   displayTeacherDetails(teacher, schoolSystem) {
+      console.log(chalk.yellow('Teacher Details:\n'));
+      console.log(chalk.cyan('ID:'), teacher.id);
 
-      // Display course summary
-      console.log(chalk.yellow('\nCourse Summary:'));
-      console.log(chalk.cyan('Course'.padEnd(30) + 'Code'.padEnd(15) + 'GPA'.padEnd(10) + 'Status'));
-      console.log('-'.repeat(60));
-
-      report.academicSummary.courses.forEach(course => {
-         console.log(
-            course.courseName.padEnd(30) +
-            course.courseCode.padEnd(15) +
-            course.courseGPA.toFixed(2).padEnd(10) +
-            course.status
-         );
-      });
+      console.log(chalk.yellow('Teacher Details:\n'));
+      console.log(chalk.cyan('Teacher Information:'));
+      console.log(chalk.cyan('---------------------'));
+      console.log(chalk.cyan('ID:'), teacher.id);
+      console.log(chalk.cyan('Name:'), teacher.name);
+      console.log(chalk.cyan('Email:'), teacher.email);
+      console.log(chalk.cyan('Phone:'), teacher.phone);
+      console.log(chalk.cyan('Department:'), teacher.department);
+      console.log(chalk.cyan('Subjects:'), teacher.subjects.join(', '));
+      console.log(chalk.cyan('Assigned Classes:'), teacher.assignedClasses);
+      console.log(chalk.cyan('Assigned Courses:'), teacher.assignedCourses.map(course => course.name).join(', '));
+      console.log(chalk.cyan('Teaching Load:'), teacher.getTeachingLoad());
+      console.log(chalk.cyan('Employment Status:'), teacher.employmentStatus);
    }
+
 }
 
 export default CLIView;

@@ -4,12 +4,15 @@ import clear from 'clear';
 import SchoolManagement from '../models/SchoolManagement.js';
 import CLIView from '../views/CLIView.js';
 import StudentController from './StudentController.js';
+import TeacherController from './TeacherController.js';
 
 class CLIController {
    constructor() {
       this.schoolSystem = null;
       this.view = new CLIView();
       this.studentController = new StudentController();
+      this.teacherController = new TeacherController();
+
    }
 
    async initialize() {
@@ -181,8 +184,6 @@ class CLIController {
          console.log(chalk.red(`\nError updating student: ${error.message}`));
       }
    }//✅
-   // Similar methods for teacherMenu, courseMenu, reportMenu, etc.
-   // I'll implement a few more key methods to demonstrate the pattern
 
    async teacherMenu() {
       while (true) {
@@ -194,12 +195,17 @@ class CLIController {
 
          switch (choice) {
             case '1':
-               await this.addTeacher();
+               await this.createTeacher();
                break;
             case '2':
                await this.viewAllTeachers();
                break;
-            // More options...
+            case '3':
+               await this.viewTeacherDetails();
+               break;
+            case '4':
+               await this.updateTeacherInfo();
+               break;
             case '0':
                return;
             default:
@@ -209,7 +215,7 @@ class CLIController {
       }
    }
 
-   async addTeacher() {
+   async createTeacher() {
       clear();
       this.view.showHeader();
 
@@ -222,19 +228,78 @@ class CLIController {
             birthDate: readlineSync.question(chalk.blue('Enter birth date (YYYY-MM-DD): ')),
             department: readlineSync.question(chalk.blue('Enter department: ')),
             subjects: readlineSync.question(chalk.blue('Enter subjects (comma separated): ')).split(',').map(s => s.trim()),
-            qualifications: []
+            assignedClasses: readlineSync.question(chalk.blue('Enter assigned classes (optional): ')) || 'N/A',
          };
 
-         const teacher = this.schoolSystem.addTeacher(teacherData);
-         console.log(chalk.green(`\nTeacher added successfully: ${teacher.name}`));
-
+         this.teacherController.addTeacher(teacherData);
       } catch (error) {
          console.log(chalk.red(`\nError adding teacher: ${error.message}`));
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
 
+   async viewAllTeachers() {
+      clear();
+      this.view.showHeader();
+      const teachers = this.teacherController.getAllTeachers();
+
+      if (teachers.length === 0) {
+         console.log(chalk.yellow('No teachers found in the system.'));
+      } else {
+         this.view.displayTeacherList(teachers);
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async viewTeacherDetails() {
+      clear();
+      this.view.showHeader();
+
+      const teacherId = readlineSync.question(chalk.blue('Enter teacher ID: '));
+      const teacher = this.teacherController.getTeacherById(teacherId);
+      if (teacher) {
+         this.view.displayTeacherDetails(teacher, this.schoolSystem);
+      } else {
+         console.log(chalk.red('Teacher not found!'));
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async updateTeacherInfo() {
+      clear();
+      this.view.showHeader();
+
+      const teacherId = readlineSync.question(chalk.blue('Enter teacher ID to update: '));
+      let teacher = this.teacherController.getTeacherById(teacherId);
+      if (!teacher) {
+         console.log(chalk.red('Teacher not found!'));
+         readlineSync.question('\nPress Enter to continue...');
+         return;
+      }
+      console.log(chalk.yellow('\nCurrent Teacher Information:'));
+      this.view.displayTeacherDetails(teacher);
+      console.log(chalk.yellow('\nLeave field empty to keep current value.'));
+
+      try {
+         const updatedData = {
+            name: readlineSync.question(chalk.blue(`Enter new name [${teacher.name}]: `)) || '',
+            email: readlineSync.question(chalk.blue(`Enter new email [${teacher.email}]: `)) || '',
+            phone: readlineSync.question(chalk.blue(`Enter new phone [${teacher.phone}]: `)) || '',
+            address: readlineSync.question(chalk.blue(`Enter new address [${teacher.address}]: `)) || '',
+            birthDate: readlineSync.question(chalk.blue(`Enter new birth date (YYYY-MM-DD) [${teacher.birthDate}]: `)) || '',
+            department: readlineSync.question(chalk.blue(`Enter new department [${teacher.department}]: `)) || '',
+            subjects: readlineSync.question(chalk.blue(`Enter new subjects (comma separated) [${teacher.subjects.join(', ')}]: `)).split(',').map(s => s.trim()),
+            assignedClasses: readlineSync.question(chalk.blue(`Enter new assigned classes [${teacher.assignedClasses}]: `)) || '',
+         };
+         this.teacherController.updateTeacher(teacherId, updatedData);
+      } catch (error) {
+         console.log(chalk.red(`\nError updating teacher information: ${error.message}`));
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   //Controlloer Input Course
    async courseMenu() {
       while (true) {
          clear();
@@ -260,6 +325,7 @@ class CLIController {
       }
    }
 
+   //Controlloer Input Enrollment
    async enrollmentMenu() {
       while (true) {
          clear();
@@ -333,6 +399,7 @@ class CLIController {
       readlineSync.question('\nPress Enter to continue...');
    }
 
+   //Controlloer Input Report
    async reportMenu() {
       while (true) {
          clear();
