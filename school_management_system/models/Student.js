@@ -15,20 +15,6 @@ class Student extends Person {
       this._achievements = [];
    }
 
-   _generateId() {
-      const year = new Date().getFullYear();
-      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(10, '1')
-      return `STD-${year}${randomNumber}`;
-   }
-
-   _validateAndSetGrade(gradeLevel) {
-      const validGradeLevel = ['10', '11', '12'];
-      if (!validGradeLevel.includes(gradeLevel.toString())) {
-         throw new Error("Invalid grade level, Must be between 10-12");
-      }
-      return gradeLevel.toString();
-   }
-
    //Getters
    get id() { return this._id; }
    get gradeLevel() { return this._gradeLevel; }
@@ -55,6 +41,20 @@ class Student extends Person {
       }
       this._academicStatus = status;
       this._updateTimestamp();
+   }
+
+   _generateId() {
+      const year = new Date().getFullYear();
+      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(8, '1')
+      return `STD-${year}${randomNumber}`;
+   }
+
+   _validateAndSetGrade(gradeLevel) {
+      const validGradeLevel = ['10', '11', '12'];
+      if (!validGradeLevel.includes(gradeLevel.toString())) {
+         throw new Error("Invalid grade level, Must be between 10-12");
+      }
+      return gradeLevel.toString();
    }
 
    //Override Parent method - Polymorphism
@@ -118,6 +118,10 @@ class Student extends Person {
       return gradeEntry;
    }
 
+   getGradesForCourse(courseId) {
+      return this._grades.get(courseId);
+   }
+
    addAchievement(title, description, date, category = 'academic') {
       const achievement = {
          id: this._generateId(),
@@ -131,10 +135,6 @@ class Student extends Person {
       this._achievements.push(achievement);
       this._updateTimestamp();
       return achievement;
-   }
-
-   getGradesForCourse(courseId) {
-      return this._grades.get(courseId);
    }
 
    calculateCourseGPA(courseId) {

@@ -20,14 +20,6 @@ class Course {
       this._updatedAt = new Date();
    }
 
-   _generateCourseId() {
-      return `CRS-${Math.random().toString(36).substring(2, 9)}`;
-   }
-
-   _updateTimestamp() {
-      this._updatedAt = new Date();
-   }
-
    //Getters
    get id() { return this._id; }
    get name() { return this._name; }
@@ -60,6 +52,14 @@ class Course {
       }
       this._status = newStatus;
       this._updateTimestamp();
+   }
+
+   _generateCourseId() {
+      return `CRS-${Math.random().toString(36).substring(2, 9)}`;
+   }
+
+   _updateTimestamp() {
+      this._updatedAt = new Date();
    }
 
    //method for course management

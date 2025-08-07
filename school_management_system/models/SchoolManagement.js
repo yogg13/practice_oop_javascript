@@ -16,35 +16,45 @@ class SchoolManagement {
          ...systemConfig
       };
       this._createdAt = new Date();
-      this._notifications = [];
+      // this._notifications = [];
 
       console.log(`🏫 ${schoolName} Management System initialized`);
       console.log(`📅 Academic Year: ${this._systemConfig.academicYear}`);
    }
 
+   // Helper method untuk notifications
+   // _addNotification(message) {
+   //    this._notifications.push({
+   //       id: Date.now().toString(36) + Math.random().toString(36).substring(2),
+   //       message: message,
+   //       timestamp: new Date(),
+   //       read: false
+   //    });
+   // }
+
    // Student management
-   addStudent(studentData) {
-      try {
-         let student = new Student(
-            studentData.name,
-            studentData.email,
-            studentData.phone,
-            studentData.address,
-            studentData.birthDate,
-            studentData.grade,
-            studentData.parentContact
-         );
+   // addStudent(studentData) {
+   //    try {
+   //       let student = new Student(
+   //          studentData.name,
+   //          studentData.email,
+   //          studentData.phone,
+   //          studentData.address,
+   //          studentData.birthDate,
+   //          studentData.grade,
+   //          studentData.parentContact
+   //       );
 
-         this._students.set(student.id, student);
-         this._addNotification(`Student added: ${student.getDisplayInfo()}`);
-         console.log(`✅ Student added: ${student.getDisplayInfo()}`);
-         return student;
+   //       this._students.set(student.id, student);
+   //       // this._addNotification(`Student added: ${student.getDisplayInfo()}`);
+   //       console.log(`\n\n✅ Student added: ${student.getDisplayInfo()}`);
+   //       return student;
 
-      } catch (error) {
-         console.error(`❌ Failed to add student: ${error.message}`);
-         throw error;
-      }
-   }
+   //    } catch (error) {
+   //       console.error(`❌ Failed to add student: ${error.message}`);
+   //       throw error;
+   //    }
+   // }
 
    // Teacher management
    addTeacher(teacherData) {
@@ -62,8 +72,8 @@ class SchoolManagement {
          );
 
          this._teachers.set(teacher.id, teacher);
-         this._addNotification(`Teacher added: ${teacher.getDisplayInfo()}`);
-         console.log(`✅ Teacher added: ${teacher.getDisplayInfo()}`);
+         // this._addNotification(`Teacher added: ${teacher.getDisplayInfo()}`);
+         console.log(`\n\n✅ Teacher added: ${teacher.getDisplayInfo()}`);
          return teacher;
 
       } catch (error) {
@@ -84,24 +94,14 @@ class SchoolManagement {
          );
 
          this._courses.set(course.id, course);
-         this._addNotification(`Course created: ${course.name} (${course.code})`);
-         console.log(`✅ Course created: ${course.name} (${course.code})`);
+         // this._addNotification(`Course created: ${course.name} (${course.code})`);
+         console.log(`\n\n✅ Course created: ${course.name} (${course.code})`);
          return course;
 
       } catch (error) {
          console.error(`❌ Failed to create course: ${error.message}`);
          throw error;
       }
-   }
-
-   // Helper method untuk notifications
-   _addNotification(message) {
-      this._notifications.push({
-         id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-         message: message,
-         timestamp: new Date(),
-         read: false
-      });
    }
 
    // Enrollment methods
@@ -117,8 +117,8 @@ class SchoolManagement {
       }
 
       course.enrollStudent(student);
-      this._addNotification(`${student.name} enrolled in ${course.name}`);
-      console.log(`✅ ${student.name} enrolled in ${course.name}`);
+      // this._addNotification(`${student.name} enrolled in ${course.name}`);
+      console.log(`\n\n✅ ${student.name} enrolled in ${course.name}`);
       return true;
    }
 
@@ -130,19 +130,19 @@ class SchoolManagement {
       if (!course) throw new Error("Course not found");
 
       course.assignTeacher(teacher);
-      this._addNotification(`${teacher.name} assigned to ${course.name}`);
-      console.log(`✅ ${teacher.name} assigned to ${course.name}`);
+      // this._addNotification(`${teacher.name} assigned to ${course.name}`);
+      console.log(`\n\n✅ ${teacher.name} assigned to ${course.name}`);
       return true;
    }
 
    // Getter methods
-   getStudent(studentId) { return this._students.get(studentId); }
+   // getStudent(studentId) { return this._students.get(studentId); }
    getTeacher(teacherId) { return this._teachers.get(teacherId); }
    getCourse(courseId) { return this._courses.get(courseId); }
-   getAllStudents() { return Array.from(this._students.values()); }
+   // getAllStudents() { return Array.from(this._students.values()); }
    getAllTeachers() { return Array.from(this._teachers.values()); }
    getAllCourses() { return Array.from(this._courses.values()); }
-   getNotifications() { return [...this._notifications]; }
+   // getNotifications() { return [...this._notifications]; }
 
    // Reporting methods
    generateStudentReport(studentId) {

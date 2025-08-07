@@ -15,12 +15,6 @@ class Teacher extends Person {
       this._employmentStatus = 'active'; // active, on_leave, terminated
    }
 
-   _generateId() {
-      const year = new Date().getFullYear();
-      const random = Math.floor(Math.random() * 1000).toString().padStart(10, '0');
-      return `TCH-${year}${random}`;
-   }
-
    // Getters
    get id() { return this._id; }
    get department() { return this._department; }
@@ -51,9 +45,15 @@ class Teacher extends Person {
       this._updateTimestamp();
    }
 
+   _generateId() {
+      const year = new Date().getFullYear();
+      const random = Math.floor(Math.random() * 1000).toString().padStart(10, '0');
+      return `TCH-${year}${random}`;
+   }
+
    // Override parent method
    getDisplayInfo() {
-      return `${this._name} - ${this._department} Teacher (${this._teacherId})`;
+      return `${this._name} - ${this._department} Teacher (${this._id})`;
    }
 
    // Teacher-specific methods

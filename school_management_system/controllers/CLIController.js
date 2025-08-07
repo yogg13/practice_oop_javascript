@@ -1,14 +1,15 @@
 import readlineSync from 'readline-sync';
 import chalk from 'chalk';
-import figlet from 'figlet';
 import clear from 'clear';
 import SchoolManagement from '../models/SchoolManagement.js';
 import CLIView from '../views/CLIView.js';
+import StudentController from './StudentController.js';
 
 class CLIController {
    constructor() {
       this.schoolSystem = null;
       this.view = new CLIView();
+      this.studentController = new StudentController();
    }
 
    async initialize() {
@@ -63,14 +64,14 @@ class CLIController {
    async studentMenu() {
       while (true) {
          clear();
-         this.view.showHeader('Student Management');
+         this.view.showHeader();
          this.view.showStudentMenu();
 
          const choice = readlineSync.question(chalk.yellow('Select an option: '));
 
          switch (choice) {
             case '1':
-               await this.addStudent();
+               await this.createStudent();
                break;
             case '2':
                await this.viewAllStudents();
@@ -90,9 +91,9 @@ class CLIController {
       }
    }
 
-   async addStudent() {
+   async createStudent() {
       clear();
-      this.view.showHeader('Add New Student');
+      this.view.showHeader();
 
       try {
          const studentData = {
@@ -101,29 +102,25 @@ class CLIController {
             phone: readlineSync.question(chalk.blue('Enter student phone: ')),
             address: readlineSync.question(chalk.blue('Enter student address: ')),
             birthDate: readlineSync.question(chalk.blue('Enter birth date (YYYY-MM-DD): ')),
-            grade: readlineSync.question(chalk.blue('Enter grade level (10, 11, 12): ')),
+            gradeLevel: readlineSync.question(chalk.blue('Enter grade level (10, 11, 12): ')),
             parentContact: {
                name: readlineSync.question(chalk.blue('Enter parent name: ')),
-               // phone: readlineSync.question(chalk.blue('Enter parent phone: ')),
-               // email: readlineSync.question(chalk.blue('Enter parent email: '))
+               phone: readlineSync.question(chalk.blue('Enter parent phone: ')),
             }
          };
-
-         const student = this.schoolSystem.addStudent(studentData);
-         console.log(chalk.green(`\nStudent added successfully: ${student.getDisplayInfo()}`));
-
+         this.studentController.addStudent(studentData);
       } catch (error) {
          console.log(chalk.red(`\nError adding student: ${error.message}`));
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
 
    async viewAllStudents() {
       clear();
-      this.view.showHeader('All Students');
+      this.view.showHeader();
 
-      const students = this.schoolSystem.getAllStudents();
+      const students = this.studentController.getAllStudents();
       if (students.length === 0) {
          console.log(chalk.yellow('No students found in the system.'));
       } else {
@@ -131,14 +128,14 @@ class CLIController {
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
 
    async viewStudentDetails() {
       clear();
-      this.view.showHeader('Student Details');
+      this.view.showHeader();
 
       const studentId = readlineSync.question(chalk.blue('Enter student ID: '));
-      const student = this.schoolSystem.getStudent(studentId);
+      const student = this.studentController.getStudentById(studentId);
 
       if (student) {
          this.view.displayStudentDetails(student, this.schoolSystem);
@@ -147,15 +144,50 @@ class CLIController {
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
 
+   async updateStudentInfo() {
+      clear();
+      this.view.showHeader();
+
+      const studentId = readlineSync.question(chalk.blue('Enter student ID to update: '));
+      let student = this.studentController.getStudentById(studentId);
+
+      if (!student) {
+         console.log(chalk.red('Student not found!'));
+         readlineSync.question('\nPress Enter to continue...');
+         return;
+      }
+
+      console.log(chalk.yellow('\nCurrent Student Information:'));
+      this.view.displayStudentDetails(student);
+      console.log(chalk.yellow('\nLeave field empty to keep current value.'));
+
+      try {
+         const updatedData = {
+            name: readlineSync.question(chalk.blue(`Enter new name [${student.name}]: `)) || '',
+            email: readlineSync.question(chalk.blue(`Enter new email [${student.email}]: `)) || '',
+            phone: readlineSync.question(chalk.blue(`Enter new phone [${student.phone}]: `)) || '',
+            address: readlineSync.question(chalk.blue(`Enter new address [${student.address}]: `)) || '',
+            birthDate: readlineSync.question(chalk.blue(`Enter new birth date (YYYY-MM-DD) [${student.birthDate}]: `)) || '',
+            gradeLevel: readlineSync.question(chalk.blue(`Enter new grade level [${student.gradeLevel}]: `)) || '',
+            parentContact: {
+               name: readlineSync.question(chalk.blue(`Enter new parent name [${student.parentContact.name}]: `)) || '',
+               phone: readlineSync.question(chalk.blue(`Enter new parent phone [${student.parentContact.phone}]: `)) || '',
+            }
+         }
+         this.studentController.updateStudent(studentId, updatedData);
+      } catch (error) {
+         console.log(chalk.red(`\nError updating student: ${error.message}`));
+      }
+   }//✅
    // Similar methods for teacherMenu, courseMenu, reportMenu, etc.
    // I'll implement a few more key methods to demonstrate the pattern
 
    async teacherMenu() {
       while (true) {
          clear();
-         this.view.showHeader('Teacher Management');
+         this.view.showHeader();
          this.view.showTeacherMenu();
 
          const choice = readlineSync.question(chalk.yellow('Select an option: '));
@@ -179,7 +211,7 @@ class CLIController {
 
    async addTeacher() {
       clear();
-      this.view.showHeader('Add New Teacher');
+      this.view.showHeader();
 
       try {
          const teacherData = {
@@ -206,7 +238,7 @@ class CLIController {
    async courseMenu() {
       while (true) {
          clear();
-         this.view.showHeader('Course Management');
+         this.view.showHeader();
          this.view.showCourseMenu();
 
          const choice = readlineSync.question(chalk.yellow('Select an option: '));
@@ -231,7 +263,7 @@ class CLIController {
    async enrollmentMenu() {
       while (true) {
          clear();
-         this.view.showHeader('Enrollment Management');
+         this.view.showHeader();
          this.view.showEnrollmentMenu();
 
          const choice = readlineSync.question(chalk.yellow('Select an option: '));
@@ -255,7 +287,7 @@ class CLIController {
 
    async enrollStudent() {
       clear();
-      this.view.showHeader('Enroll Student in Course');
+      this.view.showHeader();
 
       try {
          // List all students
@@ -304,7 +336,7 @@ class CLIController {
    async reportMenu() {
       while (true) {
          clear();
-         this.view.showHeader('Report Generation');
+         this.view.showHeader();
          this.view.showReportMenu();
 
          const choice = readlineSync.question(chalk.yellow('Select an option: '));
@@ -330,7 +362,7 @@ class CLIController {
 
    async generateStudentReport() {
       clear();
-      this.view.showHeader('Generate Student Report');
+      this.view.showHeader();
 
       try {
          const studentId = readlineSync.question(chalk.blue('Enter student ID: '));

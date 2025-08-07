@@ -2,18 +2,13 @@ import chalk from 'chalk';
 import figlet from 'figlet';
 
 class CLIView {
-   showHeader(subtitle = '') {
+   showHeader() {
       console.log(chalk.cyan(figlet.textSync('School Management', { horizontalLayout: 'full' })));
       console.log(chalk.yellow('='.repeat(60)));
-
-      if (subtitle) {
-         console.log(chalk.green(`${subtitle}`));
-         console.log(chalk.yellow('-'.repeat(60)));
-      }
    }
 
    showMainMenu() {
-      console.log(chalk.yellow('\nMAIN MENU:'));
+      console.log(chalk.yellow('MAIN MENU:\n'));
       console.log('1. Student Management');
       console.log('2. Teacher Management');
       console.log('3. Course Management');
@@ -24,7 +19,7 @@ class CLIView {
    }
 
    showStudentMenu() {
-      console.log(chalk.yellow('\nSTUDENT MANAGEMENT:'));
+      console.log(chalk.yellow('STUDENT MANAGEMENT:\n'));
       console.log('1. Add New Student');
       console.log('2. View All Students');
       console.log('3. View Student Details');
@@ -34,7 +29,7 @@ class CLIView {
    }
 
    showTeacherMenu() {
-      console.log(chalk.yellow('\nTEACHER MANAGEMENT:'));
+      console.log(chalk.yellow('TEACHER MANAGEMENT:\n'));
       console.log('1. Add New Teacher');
       console.log('2. View All Teachers');
       console.log('3. View Teacher Details');
@@ -44,7 +39,7 @@ class CLIView {
    }
 
    showCourseMenu() {
-      console.log(chalk.yellow('\nCOURSE MANAGEMENT:'));
+      console.log(chalk.yellow('COURSE MANAGEMENT:\n'));
       console.log('1. Create New Course');
       console.log('2. View All Courses');
       console.log('3. View Course Details');
@@ -56,7 +51,7 @@ class CLIView {
    }
 
    showEnrollmentMenu() {
-      console.log(chalk.yellow('\nENROLLMENT MANAGEMENT:'));
+      console.log(chalk.yellow('ENROLLMENT MANAGEMENT:\n'));
       console.log('1. Enroll Student in Course');
       console.log('2. Assign Teacher to Course');
       console.log('3. Record Student Attendance');
@@ -66,7 +61,7 @@ class CLIView {
    }
 
    showReportMenu() {
-      console.log(chalk.yellow('\nREPORT GENERATION:'));
+      console.log(chalk.yellow('REPORT GENERATION:\n'));
       console.log('1. Student Report');
       console.log('2. Course Report');
       console.log('3. Teacher Report');
@@ -75,22 +70,23 @@ class CLIView {
    }
 
    displayStudentList(students) {
-      console.log(chalk.yellow('\nStudent List:'));
-      console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Grade'.padEnd(10) + 'Status'));
-      console.log(chalk.yellow('-'.repeat(60)));
+      console.log(chalk.yellow('Student List:\n'));
+      console.log(chalk.cyan('ID'.padEnd(30) + 'Name'.padEnd(15) + 'Role'.padEnd(15) + 'Grade Level'.padEnd(15) + 'Status'.padEnd(10)));
+      console.log(chalk.yellow('-'.repeat(80)));
 
       students.forEach(student => {
          console.log(
-            student.id.padEnd(15) +
-            student.name.padEnd(30) +
-            student.gradeLevel.padEnd(10) +
-            student.academicStatus
+            student.id.padEnd(30) +
+            student.name.padEnd(15) +
+            student.role.padEnd(15) +
+            student.gradeLevel.padEnd(15) +
+            student.academicStatus.padEnd(10)
          );
       });
    }
 
    displayTeacherList(teachers) {
-      console.log(chalk.yellow('\nTeacher List:'));
+      console.log(chalk.yellow('Teacher List:\n'));
       console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Department'.padEnd(20) + 'Status'));
       console.log(chalk.yellow('-'.repeat(70)));
 
@@ -105,7 +101,7 @@ class CLIView {
    }
 
    displayCourseList(courses) {
-      console.log(chalk.yellow('\nCourse List:'));
+      console.log(chalk.yellow('Course List:\n'));
       console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Code'.padEnd(10) + 'Students'.padEnd(10) + 'Status'));
       console.log(chalk.yellow('-'.repeat(70)));
 
@@ -121,7 +117,9 @@ class CLIView {
    }
 
    displayStudentDetails(student, schoolSystem) {
-      console.log(chalk.yellow('\nStudent Details:'));
+      console.log(chalk.yellow('Student Details:\n'));
+      console.log(chalk.cyan('Student Information:'));
+      console.log(chalk.cyan('---------------------'));
       console.log(chalk.cyan('ID:'), student.id);
       console.log(chalk.cyan('Name:'), student.name);
       console.log(chalk.cyan('Email:'), student.email);
@@ -158,10 +156,10 @@ class CLIView {
    }
 
    displayStudentReport(report) {
-      console.log(chalk.yellow('\nStudent Report:'));
+      console.log(chalk.yellow('Student Report:\n'));
       console.log(chalk.cyan('Student:'), report.student.name);
       console.log(chalk.cyan('ID:'), report.student.id);
-      console.log(chalk.cyan('Grade Level:'), report.student.role);
+      console.log(chalk.cyan('School:'), report.student.role);
       console.log(chalk.cyan('Academic Status:'), report.academicSummary.academicStatus);
       console.log(chalk.cyan('Academic Year:'), report.academicYear);
       console.log(chalk.cyan('Report Date:'), report.generatedAt.toLocaleDateString());
