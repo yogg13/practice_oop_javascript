@@ -29,15 +29,30 @@ class CourseController {
       if (!course) {
          throw new Error(`Course with ID ${courseId} not found`);
       }
+      console.log("Course before update:", course);
+      console.log("Updated Data:", updatedData);
 
       try {
-         if (updatedData.description && typeof updatedData.description === 'object') {
+         if (updatedData.name && updatedData.name.trim() !== '') {
+            course.name = updatedData.name;
+         }
+         if (updatedData.code && updatedData.code.trim() !== '') {
+            course.code = updatedData.code;
+         }
+         if (updatedData.subject && updatedData.subject.trim() !== '') {
+            course.subject = updatedData.subject;
+         }
+         if (updatedData.description && typeof updatedData.description !== '') {
             course.description = updatedData.description;
          }
          if (updatedData.schedule && typeof updatedData.schedule === 'object') {
-            course.schedule = updatedData.schedule;
+            course.schedule = {
+               days: updatedData.schedule.days || course.schedule.days,
+               time: updatedData.schedule.time || course.schedule.time,
+               room: updatedData.schedule.room || course.schedule.room,
+            };
          }
-         if (updatedData.status && typeof updatedData.status.trim() !== '') {
+         if (updatedData.status && updatedData.status.trim() !== '') {
             course.status = updatedData.status;
          }
          console.log(`✅ Course updated: ${course.name} - ${course.code}`);
@@ -50,6 +65,9 @@ class CourseController {
       const course = this.getCourseById(courseId);
       if (!course) {
          throw new Error(`Course with ID ${courseId} not found`);
+      }
+      if (assignmentData.dueDate < new Date()) {
+         throw new Error("Invalid due date");
       }
 
       try {

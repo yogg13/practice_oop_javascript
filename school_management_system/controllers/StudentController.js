@@ -85,7 +85,7 @@ class StudentController {
          student: student.getDisplayInfo(),
          academicSummary: student.getAcademicSummary(),
          generatedAt: new Date(),
-         // academicYear: this._systemConfig.academicYear
+         academicYear: this._systemConfig.academicYear || new Date(),
       };
    }
 }

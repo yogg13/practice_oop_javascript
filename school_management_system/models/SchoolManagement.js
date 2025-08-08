@@ -39,57 +39,57 @@ class SchoolManagement {
    }
 
    // Course management
-   createCourse(courseData) {
-      try {
-         const course = new Course(
-            courseData.name,
-            courseData.subject,
-            courseData.code,
-            courseData.description,
-            courseData.schedule
-         );
+   // createCourse(courseData) {
+   //    try {
+   //       const course = new Course(
+   //          courseData.name,
+   //          courseData.subject,
+   //          courseData.code,
+   //          courseData.description,
+   //          courseData.schedule
+   //       );
 
-         this._courses.set(course.id, course);
-         // this._addNotification(`Course created: ${course.name} (${course.code})`);
-         console.log(`\n\n✅ Course created: ${course.name} (${course.code})`);
-         return course;
+   //       this._courses.set(course.id, course);
+   //       // this._addNotification(`Course created: ${course.name} (${course.code})`);
+   //       console.log(`\n\n✅ Course created: ${course.name} (${course.code})`);
+   //       return course;
 
-      } catch (error) {
-         console.error(`❌ Failed to create course: ${error.message}`);
-         throw error;
-      }
-   }
+   //    } catch (error) {
+   //       console.error(`❌ Failed to create course: ${error.message}`);
+   //       throw error;
+   //    }
+   // }
 
-   // Enrollment methods
-   enrollStudentInCourse(studentId, courseId) {
-      const student = this._students.get(studentId);
-      const course = this._courses.get(courseId);
+   // // Enrollment methods
+   // enrollStudentInCourse(studentId, courseId) {
+   //    const student = this._students.get(studentId);
+   //    const course = this._courses.get(courseId);
 
-      if (!student) throw new Error("Student not found");
-      if (!course) throw new Error("Course not found");
+   //    if (!student) throw new Error("Student not found");
+   //    if (!course) throw new Error("Course not found");
 
-      if (course.studentCount >= this._systemConfig.maxStudentsPerCourse) {
-         throw new Error("Course is full");
-      }
+   //    if (course.studentCount >= this._systemConfig.maxStudentsPerCourse) {
+   //       throw new Error("Course is full");
+   //    }
 
-      course.enrollStudent(student);
-      // this._addNotification(`${student.name} enrolled in ${course.name}`);
-      console.log(`\n\n✅ ${student.name} enrolled in ${course.name}`);
-      return true;
-   }
+   //    course.enrollStudent(student);
+   //    // this._addNotification(`${student.name} enrolled in ${course.name}`);
+   //    console.log(`\n\n✅ ${student.name} enrolled in ${course.name}`);
+   //    return true;
+   // }
 
-   assignTeacherToCourse(teacherId, courseId) {
-      const teacher = this._teachers.get(teacherId);
-      const course = this._courses.get(courseId);
+   // assignTeacherToCourse(teacherId, courseId) {
+   //    const teacher = this._teachers.get(teacherId);
+   //    const course = this._courses.get(courseId);
 
-      if (!teacher) throw new Error("Teacher not found");
-      if (!course) throw new Error("Course not found");
+   //    if (!teacher) throw new Error("Teacher not found");
+   //    if (!course) throw new Error("Course not found");
 
-      course.assignTeacher(teacher);
-      // this._addNotification(`${teacher.name} assigned to ${course.name}`);
-      console.log(`\n\n✅ ${teacher.name} assigned to ${course.name}`);
-      return true;
-   }
+   //    course.assignTeacher(teacher);
+   //    // this._addNotification(`${teacher.name} assigned to ${course.name}`);
+   //    console.log(`\n\n✅ ${teacher.name} assigned to ${course.name}`);
+   //    return true;
+   // }
 
    // Getter methods
    // getCourse(courseId) { return this._courses.get(courseId); }

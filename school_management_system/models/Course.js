@@ -35,16 +35,39 @@ class Course {
    get studentCount() { return this._enrolledStudents.size; }
 
    // Setters
-   set description(newDescription) {
-      this._description = { ...newDescription };
+   set name(newName) {
+      if (newName.trim() === '') {
+         throw new Error("Invalid course name");
+      }
+      this._name = newName;
       this._updateTimestamp();
    }
+   set code(newCode) {
+      if (newCode.trim() === '') {
+         throw new Error("Invalid course code");
+      }
+      this._code = newCode;
+      this._updateTimestamp();
+   }
+   set subject(newSubject) {
+      if (typeof newSubject !== 'string' || newSubject.trim() === '') {
+         throw new Error("Invalid subject");
+      }
+      this._subject = newSubject;
+      this._updateTimestamp();
+   }
+   set description(newDescription) {
+      if (newDescription.trim() === '') {
+         throw new Error("Invalid description");
+      }
 
+      this._description = newDescription;
+      this._updateTimestamp();
+   }
    set schedule(newSchedule) {
       this._schedule = { ...newSchedule };
       this._updateTimestamp();
    }
-
    set status(newStatus) {
       const validStatus = ['active', 'completed', 'cancelled'];
       if (!validStatus.includes(newStatus)) {
@@ -53,6 +76,7 @@ class Course {
       this._status = newStatus;
       this._updateTimestamp();
    }
+
 
    _generateCourseId() {
       return `CRS-${Math.random().toString(36).substring(2, 9)}`;
@@ -112,17 +136,17 @@ class Course {
       return true;
    }
 
-   createAssignment(title, description, dueDate, maxScore, type = 'assignment') {
-      const assignment = new Assignment(title, description, dueDate, maxScore, type, this._id);
+   createAssignment(title, description, dueDate, minScore, maxScore, type = 'assignment') {
+      const assignment = new Assignment(title, description, dueDate, minScore, maxScore, type, this._id);
       this._assignments.set(assignment.id, assignment);
       this._updateTimestamp();
       return assignment;
    }
 
-   createExam(title, date, duration, maxScore, exampType = 'exam') {
-      const exam = new Exam(title, date, duration, maxScore, exampType, this._id);
+   createExam(title, date, duration, minScore, maxScore, examType = 'exam') {
+      const exam = new Exam(title, date, duration, minScore, maxScore, examType, this._id);
       this._exams.set(exam.id, exam);
-      this._updateTimestamp()
+      this._updateTimestamp();
       return exam;
    }
 

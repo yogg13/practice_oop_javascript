@@ -11,7 +11,7 @@ class Student extends Person {
       this._grades = new Map();
       this._attendance = new Map();
       this._parentContact = parentContact || {};
-      this._academicStatus = 'active';
+      this._academicStatus = 'active'; //active, suspended, graduated, transferred
       this._achievements = [];
    }
 
