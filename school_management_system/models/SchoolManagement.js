@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import Course from "./Course.js";
 import Student from "./Student.js";
 import Teacher from "./Teacher.js";
@@ -16,10 +17,25 @@ class SchoolManagement {
          ...systemConfig
       };
       this._createdAt = new Date();
-      // this._notifications = [];
 
       console.log(`🏫 ${schoolName} Management System initialized`);
       console.log(`📅 Academic Year: ${this._systemConfig.academicYear}`);
+   }
+
+   get schoolName() { return this._schoolName; }
+   set schoolName(name) {
+      if (typeof name !== 'string' || name.trim() === '') {
+         return console.log(chalk.red('❌ Invalid School name'));
+      }
+      this._schoolName = name;
+   }
+
+   get academicYear() { return this._systemConfig.academicYear; }
+   set academicYear(year) {
+      if (typeof year !== 'number' || (year < 2000 || year > new Date().getFullYear())) {
+         return console.log(chalk.red('❌ Invalid Academic Year'));
+      }
+      this._systemConfig.academicYear = year;
    }
 
    // Course management
@@ -76,55 +92,9 @@ class SchoolManagement {
    }
 
    // Getter methods
-   // getStudent(studentId) { return this._students.get(studentId); }
-   // getTeacher(teacherId) { return this._teachers.get(teacherId); }
-   getCourse(courseId) { return this._courses.get(courseId); }
-   // getAllStudents() { return Array.from(this._students.values()); }
-   // getAllTeachers() { return Array.from(this._teachers.values()); }
-   getAllCourses() { return Array.from(this._courses.values()); }
-   // getNotifications() { return [...this._notifications]; }
+   // getCourse(courseId) { return this._courses.get(courseId); }
+   // getAllCourses() { return Array.from(this._courses.values()); }
 
-   // Reporting methods
-   generateStudentReport(studentId) {
-      const student = this._students.get(studentId);
-      if (!student) throw new Error("Student not found");
-
-      return {
-         student: student.getFullProfile(),
-         academicSummary: student.getAcademicSummary(),
-         generatedAt: new Date(),
-         academicYear: this._systemConfig.academicYear
-      };
-   }
-
-   generateTeacherReport(teacherId) {
-      const teacher = this._teachers.get(teacherId);
-      if (!teacher) throw new Error("Teacher not found");
-
-      return {
-         teacher: teacher.getFullProfile(),
-         teachingSummary: teacher.getTeachingSummary(),
-         generatedAt: new Date(),
-         academicYear: this._systemConfig.academicYear
-      };
-   }
-
-   generateCourseReport(courseId) {
-      const course = this._courses.get(courseId);
-      if (!course) throw new Error("Course not found");
-
-      return {
-         course: course.getCourseInfo(),
-         students: course.enrolledStudents.map(enrollment => ({
-            student: enrollment.student.getDisplayInfo(),
-            enrolledAt: enrollment.enrolledAt,
-            status: enrollment.status,
-            gpa: enrollment.student.calculateCourseGPA(courseId),
-         })),
-         generatedAt: new Date(),
-         academicYear: this._systemConfig.academicYear
-      };
-   }
 }
 
 export default SchoolManagement;

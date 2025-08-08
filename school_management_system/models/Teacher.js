@@ -76,16 +76,12 @@ class Teacher extends Person {
       return false;
    }
 
-   canTeachSubject(subject) {
-      return this._subjects.includes(subject);
-   }
-
    assignToCourse(course) {
       if (this._assignedCourses.has(course.id)) {
          throw new Error(`Already assigned to course: ${course.name}`);
       }
 
-      if (!this.canTeachSubject(course.subject)) {
+      if (!this._subjects.includes(course.subject)) {
          throw new Error(`Cannot teach ${course.subject}. Not qualified for this subject.`);
       }
 
@@ -115,32 +111,6 @@ class Teacher extends Person {
       this._updateTimestamp();
       return true;
    }
-
-   // addQualification(qualification) {
-   //    const qualificationEntry = {
-   //       id: this._generateId(),
-   //       ...qualification,
-   //       addedAt: new Date()
-   //    };
-
-   //    this._qualifications.push(qualificationEntry);
-   //    this._updateTimestamp();
-   //    return qualificationEntry;
-   // }
-
-   // updateQualification(qualificationId, updatedData) {
-   //    const index = this._qualifications.findIndex(q => q.id === qualificationId);
-   //    if (index === -1) {
-   //       throw new Error("Qualification not found");
-   //    }
-   //    this._qualifications[index] = {
-   //       ...this._qualifications[index],
-   //       ...updatedData,
-   //    };
-
-   //    this._updateTimestamp();
-   //    return this._qualifications[index];
-   // }
 
    getTeachingLoad() {
       return Array.from(this._assignedCourses.values())

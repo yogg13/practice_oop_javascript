@@ -76,6 +76,18 @@ class StudentController {
          throw error;
       }
    }
+
+   generateStudentReport(studentId) {
+      const student = this._students.get(studentId);
+      if (!student) throw new Error("Student not found");
+
+      return {
+         student: student.getDisplayInfo(),
+         academicSummary: student.getAcademicSummary(),
+         generatedAt: new Date(),
+         // academicYear: this._systemConfig.academicYear
+      };
+   }
 }
 
 export default StudentController;

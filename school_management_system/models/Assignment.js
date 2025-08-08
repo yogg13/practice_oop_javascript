@@ -12,10 +12,6 @@ class Assignment {
       this._status = 'active'; // active, close
    }
 
-   _generateAssignmentId() {
-      return `ASG-${Math.random().toString(36).substring(2, 9)}`;
-   }
-
    // Getters
    get id() { return this._id; }
    get title() { return this._title; }
@@ -34,6 +30,10 @@ class Assignment {
          throw new Error("Invalid assignment status");
       }
       this._status = newStatus;
+   }
+
+   _generateAssignmentId() {
+      return `ASG-${Math.random().toString(36).substring(2, 9)}`;
    }
 
    submitAssignment(studentId, content, submittedAt = new Date()) {

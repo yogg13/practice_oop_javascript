@@ -5,6 +5,7 @@ import SchoolManagement from '../models/SchoolManagement.js';
 import CLIView from '../views/CLIView.js';
 import StudentController from './StudentController.js';
 import TeacherController from './TeacherController.js';
+import CourseController from './CourseController.js';
 
 class CLIController {
    constructor() {
@@ -12,7 +13,7 @@ class CLIController {
       this.view = new CLIView();
       this.studentController = new StudentController();
       this.teacherController = new TeacherController();
-
+      this.courseController = new CourseController();
    }
 
    async initialize() {
@@ -34,6 +35,8 @@ class CLIController {
       while (true) {
          clear();
          this.view.showHeader();
+         console.log(chalk.cyan(`Welcome to ${this.schoolSystem.schoolName} Management System - Academic Year: ${this.schoolSystem.academicYear}`));
+         console.log(chalk.yellow('='.repeat(70)));
          this.view.showMainMenu();
 
          const choice = readlineSync.question(chalk.yellow('Select an option: '));
@@ -64,6 +67,7 @@ class CLIController {
       }
    }
 
+   //START - Controller Input Student
    async studentMenu() {
       while (true) {
          clear();
@@ -184,7 +188,9 @@ class CLIController {
          console.log(chalk.red(`\nError updating student: ${error.message}`));
       }
    }//✅
+   //END - Controller Input Student
 
+   //START - Controller Input Teacher
    async teacherMenu() {
       while (true) {
          clear();
@@ -298,8 +304,9 @@ class CLIController {
       }
       readlineSync.question('\nPress Enter to continue...');
    }//✅
+   //END - Controller Input Teacher
 
-   //Controlloer Input Course
+   //START - Controller Input Course
    async courseMenu() {
       while (true) {
          clear();
@@ -315,7 +322,18 @@ class CLIController {
             case '2':
                await this.viewAllCourses();
                break;
-            // More options...
+            case '3':
+               await this.viewCourseDetails();
+               break;
+            case '4':
+               await this.updateCourseInfo();
+               break;
+            case '5':
+               await this.addAssignmentToCourse();
+               break;
+            case '6':
+               await this.addExamToCourse();
+               break;
             case '0':
                return;
             default:
@@ -323,9 +341,183 @@ class CLIController {
                readlineSync.question('Press Enter to continue...');
          }
       }
-   }
+   } //✅
 
-   //Controlloer Input Enrollment
+   async addCourse() {
+      clear();
+      this.view.showHeader();
+
+      try {
+         const courseData = {
+            name: readlineSync.question(chalk.blue('Enter course name: ')),
+            subject: readlineSync.question(chalk.blue('Enter subject: ')),
+            code: readlineSync.question(chalk.blue('Enter course code: ')),
+            description: readlineSync.question(chalk.blue('Enter course description: ')),
+            schedule: {
+               days: readlineSync.question(chalk.blue('Enter days (comma separated): ')).split(',').map(d => d.trim()),
+               time: readlineSync.question(chalk.blue('Enter time slot (e.g. 08:00-10:00): ')),
+               room: readlineSync.question(chalk.blue('Enter room: '))
+            }
+         }
+         this.courseController.addCourse(courseData);
+      } catch (error) {
+         console.log(chalk.red(`\nError adding course: ${error.message}`));
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   } //✅
+
+   async viewAllCourses() {
+      clear();
+      this.view.showHeader();
+
+      const courses = this.courseController.getAllCourses();
+      if (courses.length === 0) {
+         console.log(chalk.yellow('No courses found in the system'));
+      } else {
+         this.view.displayCourseList(courses);
+      }
+
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async viewCourseDetails() {
+      clear();
+      this.view.showHeader();
+
+      const courseId = readlineSync.question(chalk.blue('Enter course ID: '));
+      const course = this.courseController.getCourseById(courseId);
+
+      if (course) {
+         this.view.displayCourseDetails(course);
+      } else {
+         console.log(chalk.red('Course not found!'));
+      }
+
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async updateCourseInfo() {
+      clear();
+      this.view.showHeader();
+
+      const courseId = readlineSync.question(chalk.blue('Enter course ID to update: '));
+      const course = this.courseController.getCourseById(courseId);
+
+      if (!course) {
+         console.log(chalk.red('Course not found!'));
+         readlineSync.question('\nPress Enter to continue...');
+         return;
+      }
+
+      console.log(chalk.yellow('\nCurrent Course Information:'));
+      this.view.displayCourseDetails(course);
+      console.log(chalk.yellow('\nLeave field empty to keep current value.'));
+
+      try {
+         const updatedData = {
+            description: readlineSync.question(chalk.blue(`Enter new description [${course.description}]: `)) || '',
+            schedule: {
+               days: readlineSync.question(chalk.blue(`Enter new days [${course.schedule.days.join(', ')}]: `)).split(',').map(d => d.trim()),
+               time: readlineSync.question(chalk.blue(`Enter new time slot [${course.schedule.time}]: `)),
+               room: readlineSync.question(chalk.blue(`Enter new room [${course.schedule.room}]: `))
+            },
+            status: readlineSync.question(chalk.blue(`Enter new status (active/completed/cancelled) [${course.status}]: `)) || '',
+         }
+
+         //Only update if schedule fields are provided
+         if (!updatedData.schedule.days[0] && !updatedData.schedule.time && !updatedData.schedule.room) {
+            delete updatedData.schedule;
+         }
+         this.courseController.updateCourse(courseId, updatedData);
+         console.log(chalk.green('\nCourse information updated successfully!'));
+      } catch (error) {
+         console.log(chalk.red(`\nError updating course: ${error.message}`));
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async addAssignmentToCourse() {
+      clear();
+      this.view.showHeader();
+
+      try {
+         // List all courses
+         const courses = this.courseController.getAllCourses();
+         if (courses.length === 0) {
+            throw new Error("No courses found in the system");
+         }
+
+         console.log(chalk.yellow("\nAvailable Courses:"));
+         courses.forEach((course, index) => {
+            console.log(`${index + 1}. ${course.name} (${course.code})`);
+         });
+
+         const courseIndex = parseInt(readlineSync.question(chalk.blue('\nSelect course number: '))) - 1;
+         if (courseIndex < 0 || courseIndex >= courses.length) {
+            throw new Error("Invalid course selection");
+         }
+
+         const course = courses[courseIndex];
+
+         const assignmentData = {
+            title: readlineSync.question(chalk.blue('Enter assignment title: ')),
+            description: readlineSync.question(chalk.blue('Enter assignment description: ')),
+            dueDate: readlineSync.question(chalk.blue('Enter due date (YYYY-MM-DD): ')),
+            maxScore: parseInt(readlineSync.question(chalk.blue('Enter maximum score: '))),
+            type: readlineSync.question(chalk.blue('Enter assignment type (default: assignment): ')) || 'assignment'
+         };
+
+         this.courseController.addAssignmentToCourse(course.id, assignmentData);
+         console.log(chalk.green('\nAssignment added successfully!'));
+      } catch (error) {
+         console.log(chalk.red(`\nError: ${error.message}`));
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async addExamToCourse() {
+      clear();
+      this.view.showHeader();
+
+      try {
+         // List all courses
+         const courses = this.courseController.getAllCourses();
+         if (courses.length === 0) {
+            throw new Error("No courses found in the system");
+         }
+
+         console.log(chalk.yellow("\nAvailable Courses:"));
+         courses.forEach((course, index) => {
+            console.log(`${index + 1}. ${course.name} (${course.code})`);
+         });
+
+         const courseIndex = parseInt(readlineSync.question(chalk.blue('\nSelect course number: '))) - 1;
+         if (courseIndex < 0 || courseIndex >= courses.length) {
+            throw new Error("Invalid course selection");
+         }
+
+         const course = courses[courseIndex];
+
+         const examData = {
+            title: readlineSync.question(chalk.blue('Enter exam title: ')),
+            date: readlineSync.question(chalk.blue('Enter exam date (YYYY-MM-DD): ')),
+            duration: parseInt(readlineSync.question(chalk.blue('Enter duration in minutes: '))),
+            maxScore: parseInt(readlineSync.question(chalk.blue('Enter maximum score: '))),
+            examType: readlineSync.question(chalk.blue('Enter exam type (quiz/midterm/final): ')) || 'exam'
+         };
+
+         this.courseController.addExamToCourse(course.id, examData);
+         console.log(chalk.green('\nExam added successfully!'));
+
+      } catch (error) {
+         console.log(chalk.red(`\nError: ${error.message}`));
+      }
+
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+   //END - Controller Input Course
+
+   //START - Controller Input Enrollment
    async enrollmentMenu() {
       while (true) {
          clear();
@@ -398,8 +590,9 @@ class CLIController {
 
       readlineSync.question('\nPress Enter to continue...');
    }
+   //END - Controller Input Enrollment
 
-   //Controlloer Input Report
+   //START - Controller Input Report
    async reportMenu() {
       while (true) {
          clear();
@@ -433,7 +626,7 @@ class CLIController {
 
       try {
          const studentId = readlineSync.question(chalk.blue('Enter student ID: '));
-         const report = this.schoolSystem.generateStudentReport(studentId);
+         const report = this.studentController.generateStudentReport(studentId);
 
          this.view.displayStudentReport(report);
 
@@ -442,7 +635,37 @@ class CLIController {
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
+
+   async generateTeacherReport() {
+      clear();
+      this.view.showHeader();
+      try {
+         const teacherId = readlineSync.question(chalk.blue('Enter teacher ID: '));
+         const report = this.teacherController.generateTeacherReport(teacherId);
+         this.view.displayTeacherReport(report);
+      } catch (error) {
+         console.log(chalk.red(`\nError: ${error.message}`));
+      }
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   async generateCourseReport() {
+      clear();
+      this.view.showHeader();
+
+      try {
+         const courseId = readlineSync.question(chalk.blue('Enter course ID: '));
+         const report = this.courseController.generateCourseReport(courseId);
+         this.view.displayCourseReport(report);
+      } catch (error) {
+         console.log(chalk.red(`\nError: ${error.message}`));
+      }
+
+      readlineSync.question('\nPress Enter to continue...');
+   }//✅
+
+   //END - Controller Input Report
 }
 
 export default CLIController;

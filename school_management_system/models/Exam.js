@@ -12,10 +12,6 @@ class Exam {
       this._status = 'scheduled'; // scheduled, in_progress, completed, cancelled
    }
 
-   _generateExamId() {
-      return `EXM-${Math.random().toString(36).substring(2, 9)}`;
-   }
-
    // Getters
    get id() { return this._id; }
    get title() { return this._title; }
@@ -34,6 +30,10 @@ class Exam {
          throw new Error("Invalid Exam Status");
       }
       this._status = newStatus;
+   }
+
+   _generateExamId() {
+      return `EXM-${Math.random().toString(36).substring(2, 9)}`;
    }
 
    recordResult(studentId, score, startTime, endTime) {

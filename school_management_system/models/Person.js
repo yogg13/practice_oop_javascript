@@ -90,29 +90,6 @@ class Person {
    getDisplayInfo() {
       return `${this._name} (${this._role}) `;
    }
-
-   getContactInfo() {
-      return {
-         email: this._email,
-         phone: this._phone,
-         address: this._address,
-      }
-   }
-
-   getFullProfile() {
-      return {
-         id: this._id,
-         name: this._name,
-         email: this._email,
-         phone: this._phone,
-         address: this._address,
-         age: this.age,
-         role: this._role,
-         displayInfo: this.getDisplayInfo(),
-         createdAt: this._createdAt,
-         updatedAt: this._updatedAt
-      }
-   }
 }
 
 export default Person;

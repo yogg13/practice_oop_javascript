@@ -61,7 +61,7 @@ class TeacherController {
             );
 
             if (newSubjects.length === 0) {
-               console.log(`All subjects already exist for this teacher.`);
+               console.log(`❌ All subjects already exist for this teacher.`);
             } else {
                // Tambahkan hanya subject yang baru
                newSubjects.forEach(subject => {
@@ -78,6 +78,18 @@ class TeacherController {
       } catch (error) {
          console.error(`❌ Failed to update teacher: ${error.message}`);
       }
+   }
+
+   generateTeacherReport(teacherId) {
+      const teacher = this._teachers.get(teacherId);
+      if (!teacher) throw new Error("Teacher not found");
+
+      return {
+         teacher: teacher.getDisplayInfo(),
+         teachingSummary: teacher.getTeachingSummary(),
+         generatedAt: new Date(),
+         // academicYear: this._systemConfig.academicYear
+      };
    }
 }
 
