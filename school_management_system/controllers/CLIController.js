@@ -1,8 +1,11 @@
 import readlineSync from 'readline-sync';
 import clear from 'clear';
 import chalk from 'chalk';
-import SchoolManagement from '../models/SchoolManagement.js';
+
 import CLIView from '../views/CLIView.js';
+import PostgreDB from '../database/PostgreDB.js';
+import SchoolManagement from '../models/SchoolManagement.js';
+import StudentRespository from '../repository/StudentRepository.js';
 import StudentController from './StudentController.js';
 import TeacherController from './TeacherController.js';
 import CourseController from './CourseController.js';
@@ -12,10 +15,12 @@ class CLIController {
    constructor() {
       this.schoolSystem = null;
       this.view = new CLIView();
-      this.studentController = new StudentController();
-      this.teacherController = new TeacherController();
-      this.courseController = new CourseController();
-      this.enrollmentController = new EnrollmentController();
+      this.db = null;
+
+      this.studentController = null;
+      this.teacherController = null;
+      this.courseController = null;
+      this.enrollmentController = null;
    }
 
    async initialize() {
@@ -30,7 +35,31 @@ class CLIController {
          academicYear: parseInt(academicYear)
       });
 
-      await this.mainMenu();
+      try {
+         console.log(chalk.yellow('\nConnecting to database...'));
+         this.db = new PostgreDB();
+         await this.db.connect();
+
+         // Initialize repositories
+         const studentRepository = new StudentRespository(this.db);
+         // const teacherRepository = new TeacherRepository(this.db);
+         // const courseRepository = new CourseRepository(this.db);
+
+         // Initialize controllers with repositories
+         this.studentController = new StudentController(studentRepository);
+         // this.teacherController = new TeacherController(teacherRepository);
+         // this.courseController = new CourseController(courseRepository);
+         // this.enrollmentController = new EnrollmentController(this.db, studentRepository, courseRepository, teacherRepository);
+
+         console.log(chalk.green('✅ System initialized successfully!'));
+         readlineSync.question('\nPress Enter to continue...');
+
+         await this.mainMenu();
+      } catch (error) {
+         console.error(chalk.red(`\n❌ Error initializing system: ${error.message}`));
+         readlineSync.question('\nPress Enter to exit...');
+         process.exit(1);
+      }
    }
 
    async mainMenu() {
@@ -1329,52 +1358,19 @@ class CLIController {
 
       readlineSync.question('\nPress Enter to continue...');
    }
-
-   // async generateStudentReport() {
-   //    clear();
-   //    this.view.showHeader();
-
-   //    try {
-   //       const studentId = readlineSync.question(chalk.blue('Enter student ID: '));
-   //       const report = this.studentController.generateStudentReport(studentId);
-
-   //       this.view.displayStudentReport(report);
-
-   //    } catch (error) {
-   //       console.log(chalk.red(`\nError: ${error.message}`));
-   //    }
-
-   //    readlineSync.question('\nPress Enter to continue...');
-   // }
-
-   // async generateTeacherReport() {
-   //    clear();
-   //    this.view.showHeader();
-   //    try {
-   //       const teacherId = readlineSync.question(chalk.blue('Enter teacher ID: '));
-   //       const report = this.teacherController.generateTeacherReport(teacherId);
-   //       this.view.displayTeacherReport(report);
-   //    } catch (error) {
-   //       console.log(chalk.red(`\nError: ${error.message}`));
-   //    }
-   //    readlineSync.question('\nPress Enter to continue...');
-   // }
-
-   // async generateCourseReport() {
-   //    clear();
-   //    this.view.showHeader();
-
-   //    try {
-   //       const courseId = readlineSync.question(chalk.blue('Enter course ID: '));
-   //       const report = this.courseController.generateCourseReport(courseId);
-   //       this.view.displayCourseReport(report);
-   //    } catch (error) {
-   //       console.log(chalk.red(`\nError: ${error.message}`));
-   //    }
-
-   //    readlineSync.question('\nPress Enter to continue...');
-   // }
    //END - Controller Input Report
+
+   async shutDown() {
+      if (this.db) {
+         try {
+            await this.db.disconnect();
+         } catch (error) {
+            console.error(chalk.red(`\n❌ Error disconnecting from database: ${error.message}`));
+         }
+      }
+      console.log(chalk.green('\n👋 Thank you for using the School Management System!'));
+      process.exit(0);
+   }
 }
 
 export default CLIController;

@@ -1,92 +1,93 @@
-import Student from "../models/Student.js";
+// import Student from "../models/Student.js";
 
 class StudentController {
-   constructor() {
-      this._students = new Map();
+   constructor(studentRepository) {
+      this._studentRepository = studentRepository;
    }
 
-   //Getter
-   getAllStudents() { return Array.from(this._students.values()); }
-   getStudentById(studentId) { return this._students.get(studentId); }
+   async getAllStudents() {
+      return await this._studentRepository.getAllStudents();
+   }
 
-   addStudent(studentData) {
+   async getStudentById(studentId) {
+      return await this._studentRepository.getStudentById(studentId);
+   }
+
+   async addStudent(studentData) {
       try {
-         let student = new Student(
-            studentData.name,
-            studentData.email,
-            studentData.phone,
-            studentData.address,
-            studentData.birthDate,
-            studentData.gradeLevel,
-            studentData.parentContact
-         );
-         this._students.set(student.id, student);
+         const student = await this._studentRepository.createStudent(studentData);
          console.log(`✅ Student added: ${student.getDisplayInfo()}`);
+         return student;
       } catch (error) {
          console.error(`❌ Failed to add student: ${error.message}`);
          throw error;
       }
    }
 
-   updateStudent(studentId, updatedData) {
-      const student = this.getStudentById(studentId);
-      if (!student) {
-         throw new Error(`Student with ID ${studentId} not found`);
-      }
+   async updateStudent(studentId, updatedData) {
       try {
-         // Gunakan setter dari Student class untuk update data
-         if (updatedData.name && updatedData.name.trim() !== '')
-            student.name = updatedData.name;
-
-         if (updatedData.email && updatedData.email.trim() !== '')
-            student.email = updatedData.email;
-
-         if (updatedData.phone && updatedData.phone.trim() !== '')
-            student.phone = updatedData.phone;
-
-         if (updatedData.address && updatedData.address.trim() !== '')
-            student.address = updatedData.address;
-
-         if (updatedData.birthDate && updatedData.birthDate.trim() !== '')
-            student.birthDate = updatedData.birthDate;
-
-         if (updatedData.gradeLevel && updatedData.gradeLevel.trim() !== '')
-            student.gradeLevel = updatedData.gradeLevel;
-
-         // Update parent contact if provided
-         if (updatedData.parentContact) {
-            const parentContact = {};
-
-            if (updatedData.parentContact.name && updatedData.parentContact.name.trim() !== '')
-               parentContact.name = updatedData.parentContact.name;
-            else
-               parentContact.name = student.parentContact.name;
-
-            if (updatedData.parentContact.phone && updatedData.parentContact.phone.trim() !== '')
-               parentContact.phone = updatedData.parentContact.phone;
-            else
-               parentContact.phone = student.parentContact.phone;
-
-            student.parentContact = parentContact;
+         const student = await this._studentRepository.updateStudent(studentId, updatedData);
+         if (!student) {
+            throw new Error(`Student with ID ${studentId} not found`);
          }
 
-         console.log(`✅ Student updated: ${student}`);
+         console.log(`✅ Student updated: ${student.getDisplayInfo()}`);
+         return student;
       } catch (error) {
          console.error(`❌ Failed to update student: ${error.message}`);
          throw error;
       }
    }
 
-   generateStudentReport(studentId) {
-      const student = this._students.get(studentId);
-      if (!student) throw new Error("Student not found");
+   async generateStudentReport(studentId) {
+      const student = await this._studentRepository.getStudentById(studentId);
+      if (!student) {
+         throw new Error(`Student with ID ${studentId} not found`);
+      }
+
+      // Get student courses
+      const courses = await this._studentRepository.getStudentCourses(studentId);
+
+      // Get student grades for each course
+      const courseGrades = {};
+      for (const course of courses) {
+         courseGrades[course.id] = await this._studentRepository.getStudentGrades(studentId, course.id);
+      }
+
+      // Build academic summary
+      const academicSummary = {
+         studentInfo: student.getDisplayInfo(),
+         enrolledCourses: courses.length,
+         academicStatus: student.academicStatus,
+         courses: courses.map(course => {
+            const grades = courseGrades[course.id] || [];
+            const gpa = this._calculateCourseGPA(grades);
+
+            return {
+               courseName: course.name,
+               courseCode: course.code,
+               courseGPA: gpa,
+               status: course.status
+            };
+         })
+      };
 
       return {
          student: student.getDisplayInfo(),
-         academicSummary: student.getAcademicSummary(),
+         academicSummary,
          generatedAt: new Date(),
-         academicYear: this._systemConfig.academicYear || new Date(),
       };
+   }
+
+   _calculateCourseGPA(grades) {
+      if (grades.length === 0) return 0;
+
+      let totalPercentage = 0;
+      grades.forEach(grade => {
+         totalPercentage += (grade.score / grade.max_score) * 100;
+      });
+
+      return totalPercentage / grades.length;
    }
 }
 

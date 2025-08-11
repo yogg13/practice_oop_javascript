@@ -1,7 +1,7 @@
 import chalk from "chalk";
-import Course from "./Course.js";
-import Student from "./Student.js";
-import Teacher from "./Teacher.js";
+// import Course from "./Course.js";
+// import Student from "./Student.js";
+// import Teacher from "./Teacher.js";
 
 class SchoolManagement {
    constructor(schoolName, systemConfig = {}) {
