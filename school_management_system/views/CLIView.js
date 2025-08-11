@@ -1,5 +1,3 @@
-import readlineSync from 'readline-sync';
-import clear from 'clear';
 import chalk from 'chalk';
 import figlet from 'figlet';
 
@@ -85,7 +83,8 @@ class CLIView {
          );
       });//✅
 
-   }
+   }//✅
+
    displayTeacherList(teachers) {
       console.log(chalk.yellow('Teacher List:\n'));
       // console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Department'.padEnd(20) + 'Status'));
@@ -231,7 +230,7 @@ class CLIView {
             console.log(`- ${exam.title} (${exam.date.toLocaleDateString()}, Duration: ${exam.duration} mins, Max Score: ${exam.maxScore})`);
          });
       }
-   }
+   }//✅
 
    displayEnhancedCourseReport(report) {
       console.log(chalk.yellow('Enhanced Course Report:\n'));

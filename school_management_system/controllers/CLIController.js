@@ -496,7 +496,7 @@ class CLIController {
 
       try {
          // List all courses
-         const courses = this.courseController.getAllCourses();
+         const courses = await this.courseController.getAllCourses();
          if (courses.length === 0) {
             throw new Error("No courses found in the system");
          }
@@ -521,13 +521,13 @@ class CLIController {
             type: readlineSync.question(chalk.blue('Enter assignment type (assignment/quiz): ')) || 'assignment'
          };
 
-         this.courseController.addAssignmentToCourse(course.id, assignmentData);
-         console.log(chalk.green('\nAssignment added successfully!'));
+         await this.courseController.addAssignmentToCourse(course.id, assignmentData);
+         console.log(chalk.green('\n✅ Assignment added successfully!'));
       } catch (error) {
          console.log(chalk.red(`\nError: ${error.message}`));
       }
       readlineSync.question('\nPress Enter to continue...');
-   }//✅
+   }//
 
    async addExamToCourse() {
       clear();
@@ -535,7 +535,7 @@ class CLIController {
 
       try {
          // List all courses
-         const courses = this.courseController.getAllCourses();
+         const courses = await this.courseController.getAllCourses();
          if (courses.length === 0) {
             throw new Error("No courses found in the system");
          }
@@ -560,15 +560,15 @@ class CLIController {
             examType: readlineSync.question(chalk.blue('Enter exam type (exam/midterm/final): ')) || 'exam'
          };
 
-         this.courseController.addExamToCourse(course.id, examData);
-         console.log(chalk.green('\nExam added successfully!'));
+         await this.courseController.addExamToCourse(course.id, examData);
+         console.log(chalk.green('\n✅ Exam added successfully!'));
 
       } catch (error) {
          console.log(chalk.red(`\nError: ${error.message}`));
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }//✅
+   }//
    //END - Controller Input Course
 
    //START - Controller Input Enrollment
