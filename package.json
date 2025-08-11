@@ -2,18 +2,20 @@
   "name": "basic_oop_js",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --env-file=./.env ./school_management_system/index.js"
   },
-  "keywords": [],
+  "keywords": [ ],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
     "chalk": "^5.5.0",
     "clear": "^0.1.0",
+    "dotenv": "^17.2.1",
     "figlet": "^1.8.2",
+    "pg": "^8.16.3",
     "readline-sync": "^1.4.10"
   }
 }
