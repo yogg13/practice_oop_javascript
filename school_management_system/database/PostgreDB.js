@@ -11,8 +11,7 @@ class PostgreDB extends DatabaseConfig {
       try {
          const { Pool } = pg;
          const config = this.getConfig();
-
-         this._port = new Pool(config);
+         this._pool = new Pool(config);
 
          const client = await this._pool.connect();
          console.log(`✅ Connected to PostgreSQL database at ${this.host}:${this.port}/${this.database}`);
@@ -47,7 +46,7 @@ class PostgreDB extends DatabaseConfig {
          const result = await this._pool.query(text, params);
          const duration = Date.now() - start;
 
-         console.log(`🔍 Executed query: ${text} in ${duration}ms`);
+         console.log(`🔍 Executed query time in ${duration}ms`);
          return result;
       } catch (error) {
          console.error('❌ Query error:', error.message);

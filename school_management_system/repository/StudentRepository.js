@@ -15,9 +15,9 @@ class StudentRespository extends BaseRepository {
          ORDER BY p.name
       `;
 
-      const result = await this.db.query(query);
+      const result = await this._db.query(query);
       return result.rows.map(row => this._mapToModel(row));
-   }
+   }//✅
 
    async getStudentById(id) {
       const query = `
@@ -27,14 +27,14 @@ class StudentRespository extends BaseRepository {
          WHERE s.id = $1
       `;
 
-      const result = await this.db.query(query, [id]);
+      const result = await this._db.query(query, [id]);
       if (result.rows.length === 0) return null;
 
       return this._mapToModel(result.rows[0]);
-   }
+   }//✅
 
    async createStudent(studentData) {
-      return await this.db.executeTransaction(async (client) => {
+      return await this._db.executeTransaction(async (client) => {
          // First, insert the person record
          const personQuery = `
             INSERT INTO persons (id, name, email, phone, address, birth_date, role)
@@ -76,10 +76,10 @@ class StudentRespository extends BaseRepository {
 
          return this._mapToModel(student);
       });
-   }
+   }//✅
 
    async updateStudent(id, updatedData) {
-      return await this.db.executeTransaction(async (client) => {
+      return await this._db.executeTransaction(async (client) => {
          let updated = false;
 
          // Update person data if necessary
@@ -164,7 +164,7 @@ class StudentRespository extends BaseRepository {
          const result = await client.query(query, [id]);
          return this._mapToModel(result.rows[0]);
       });
-   }
+   }//✅
 
    async getStudentCourses(studentId) {
       const query = `
@@ -174,7 +174,7 @@ class StudentRespository extends BaseRepository {
          WHERE e.student_id = $1
       `;
 
-      const result = await this.db.query(query, [studentId]);
+      const result = await this._db.query(query, [studentId]);
       return result.rows;
    }
 
@@ -193,7 +193,7 @@ class StudentRespository extends BaseRepository {
 
       query += ` ORDER BY date DESC`;
 
-      const result = await this.db.query(query, params);
+      const result = await this._db.query(query, params);
       return result.rows;
    }
 

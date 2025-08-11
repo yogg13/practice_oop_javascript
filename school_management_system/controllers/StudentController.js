@@ -1,5 +1,3 @@
-// import Student from "../models/Student.js";
-
 class StudentController {
    constructor(studentRepository) {
       this._studentRepository = studentRepository;
@@ -7,22 +5,21 @@ class StudentController {
 
    async getAllStudents() {
       return await this._studentRepository.getAllStudents();
-   }
+   }//✅
 
    async getStudentById(studentId) {
       return await this._studentRepository.getStudentById(studentId);
-   }
+   }//✅
 
    async addStudent(studentData) {
       try {
          const student = await this._studentRepository.createStudent(studentData);
-         console.log(`✅ Student added: ${student.getDisplayInfo()}`);
          return student;
       } catch (error) {
          console.error(`❌ Failed to add student: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
 
    async updateStudent(studentId, updatedData) {
       try {
@@ -30,14 +27,12 @@ class StudentController {
          if (!student) {
             throw new Error(`Student with ID ${studentId} not found`);
          }
-
-         console.log(`✅ Student updated: ${student.getDisplayInfo()}`);
          return student;
       } catch (error) {
          console.error(`❌ Failed to update student: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
 
    async generateStudentReport(studentId) {
       const student = await this._studentRepository.getStudentById(studentId);

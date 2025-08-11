@@ -1,124 +1,147 @@
-import Course from "../models/Course.js";
-
 class CourseController {
-   constructor() {
-      this._courses = new Map();
+   constructor(courseRepository, assignmentRepository, examRepository) {
+      this._courseRepository = courseRepository;
+      this._assignmentRepository = assignmentRepository;
+      this._examRepository = examRepository;
    }
 
-   getCourseById(courseId) { return this._courses.get(courseId); }
-   getAllCourses() { return Array.from(this._courses.values()); }
+   async getAllCourses() {
+      return await this._courseRepository.getAllCourses();
+   }
 
-   addCourse(courseData) {
+   async getCourseById(courseId) {
+      return await this._courseRepository.getCourseById(courseId);
+   }
+
+   async addCourse(courseData) {
       try {
-         const course = new Course(
-            courseData.name,
-            courseData.subject,
-            courseData.code,
-            courseData.description,
-            courseData.schedule,
-         )
-         this._courses.set(course.id, course);
-         console.log(`✅ Course added: ${course.name} - ${course.code}`);
+         const course = await this._courseRepository.createCourse(courseData);
+         return course;
       } catch (error) {
          console.error(`❌ Failed to add course: ${error.message}`);
+         throw error;
       }
    }
 
-   updateCourse(courseId, updatedData) {
-      const course = this.getCourseById(courseId);
-      if (!course) {
-         throw new Error(`Course with ID ${courseId} not found`);
-      }
-      console.log("Course before update:", course);
-      console.log("Updated Data:", updatedData);
-
+   async updateCourse(courseId, updatedData) {
       try {
-         if (updatedData.name && updatedData.name.trim() !== '') {
-            course.name = updatedData.name;
-         }
-         if (updatedData.code && updatedData.code.trim() !== '') {
-            course.code = updatedData.code;
-         }
-         if (updatedData.subject && updatedData.subject.trim() !== '') {
-            course.subject = updatedData.subject;
-         }
-         if (updatedData.description && typeof updatedData.description !== '') {
-            course.description = updatedData.description;
-         }
-         if (updatedData.schedule && typeof updatedData.schedule === 'object') {
-            course.schedule = {
-               days: updatedData.schedule.days || course.schedule.days,
-               time: updatedData.schedule.time || course.schedule.time,
-               room: updatedData.schedule.room || course.schedule.room,
-            };
-         }
-         if (updatedData.status && updatedData.status.trim() !== '') {
-            course.status = updatedData.status;
-         }
-         console.log(`✅ Course updated: ${course.name} - ${course.code}`);
+         const course = await this._courseRepository.updateCourse(courseId, updatedData);
+         return course;
       } catch (error) {
          console.error(`❌ Failed to update course: ${error.message}`);
+         throw error;
       }
    }
 
-   addAssignmentToCourse(courseId, assignmentData) {
-      const course = this.getCourseById(courseId);
-      if (!course) {
-         throw new Error(`Course with ID ${courseId} not found`);
-      }
-      if (assignmentData.dueDate < new Date()) {
-         throw new Error("Invalid due date");
-      }
-
+   async assignTeacherToCourse(courseId, teacherId) {
       try {
-         const assignment = course.createAssignment(
-            assignmentData.title,
-            assignmentData.description,
-            assignmentData.dueDate,
-            assignmentData.maxScore,
-            assignmentData.type,
-         );
+         await this._courseRepository.assignTeacher(courseId, teacherId);
+         console.log(`✅ Teacher assigned to course`);
+         return await this._courseRepository.getCourseById(courseId);
+      } catch (error) {
+         console.error(`❌ Failed to assign teacher to course: ${error.message}`);
+         throw error;
+      }
+   }
+
+   async addAssignmentToCourse(courseId, assignmentData) {
+      try {
+         const course = await this._courseRepository.getCourseById(courseId);
+         if (!course) {
+            throw new Error(`Course with ID ${courseId} not found`);
+         }
+
+         const assignment = await this._assignmentRepository.createAssignment({
+            ...assignmentData,
+            courseId
+         });
+
          console.log(`✅ Assignment added to course: ${assignment.title}`);
+         return assignment;
       } catch (error) {
          console.error(`❌ Failed to add assignment: ${error.message}`);
+         throw error;
       }
    }
 
-   addExamToCourse(courseId, examData) {
-      const course = this.getCourseById(courseId);
-      if (!course) {
-         throw new Error(`Course with ID ${courseId} not found`);
-      }
-
+   async addExamToCourse(courseId, examData) {
       try {
-         const exam = course.createExam(
-            examData.title,
-            examData.date,
-            examData.duration,
-            examData.maxScore,
-            examData.examType,
-         );
+         const course = await this._courseRepository.getCourseById(courseId);
+         if (!course) {
+            throw new Error(`Course with ID ${courseId} not found`);
+         }
+
+         const exam = await this._examRepository.createExam({
+            ...examData,
+            courseId
+         });
+
          console.log(`✅ Exam added to course: ${exam.title}`);
+         return exam;
       } catch (error) {
          console.error(`❌ Failed to add exam: ${error.message}`);
+         throw error;
       }
    }
 
+   async generateCourseReport(courseId) {
+      try {
+         const course = await this._courseRepository.getCourseById(courseId);
+         if (!course) {
+            throw new Error(`Course with ID ${courseId} not found`);
+         }
 
-   generateCourseReport(courseId) {
-      const course = this._courses.get(courseId);
-      if (!course) throw new Error("Course not found");
+         // Get enrolled students
+         const enrolledStudents = await this._courseRepository.getEnrolledStudents(courseId);
 
-      return {
-         course: course.getCourseInfo(),
-         students: course.enrolledStudents.map(enrollment => ({
-            student: enrollment.student.getDisplayInfo(),
-            enrolledAt: enrollment.enrolledAt,
-            status: enrollment.status,
-            gpa: enrollment.student.calculateCourseGPA(courseId),
-         })),
-         generatedAt: new Date(),
-      };
+         // Get assignments and exams
+         const assignments = await this._assignmentRepository.getAssignmentsByCourse(courseId);
+         const exams = await this._examRepository.getExamsByCourse(courseId);
+
+         return {
+            course: {
+               id: course.id,
+               name: course.name,
+               code: course.code,
+               subject: course.subject,
+               description: course.description,
+               schedule: {
+                  days: course.schedule.days,
+                  time: course.schedule.time,
+                  room: course.schedule.room
+               },
+               teacher: course._teacherName ? `${course._teacherName} (${course._teacherId})` : 'Not Assigned',
+               status: course.status,
+               studentCount: enrolledStudents.length,
+               assignments: assignments.map(a => ({
+                  id: a.id,
+                  title: a.title,
+                  dueDate: a.dueDate,
+                  maxScore: a.maxScore
+               })),
+               exams: exams.map(e => ({
+                  id: e.id,
+                  title: e.title,
+                  date: e.date,
+                  maxScore: e.maxScore
+               }))
+            },
+            students: enrolledStudents.map(enrollment => {
+               // Mock GPA calculation for simplicity - in real app would compute from grades
+               const mockGpa = Math.random() * 4;
+               return {
+                  student: `${enrollment.student_name} (${enrollment.student_id})`,
+                  enrolledAt: enrollment.enrolled_at,
+                  status: enrollment.status,
+                  gpa: mockGpa
+               };
+            }),
+            generatedAt: new Date()
+         };
+      } catch (error) {
+         console.error(`❌ Failed to generate course report: ${error.message}`);
+         throw error;
+      }
    }
 }
 

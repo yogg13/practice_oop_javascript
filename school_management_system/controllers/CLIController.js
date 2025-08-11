@@ -1,11 +1,16 @@
 import readlineSync from 'readline-sync';
 import clear from 'clear';
 import chalk from 'chalk';
-
 import CLIView from '../views/CLIView.js';
 import PostgreDB from '../database/PostgreDB.js';
 import SchoolManagement from '../models/SchoolManagement.js';
 import StudentRespository from '../repository/StudentRepository.js';
+import TeacherRepository from '../repository/TeacherRepository.js';
+import CourseRepository from '../repository/CourseRepository.js';
+import AssignmentRepository from '../repository/AssignmentRepository.js';
+import ExamRepository from '../repository/ExamRepository.js';
+import EnrollmentRepository from '../repository/EnrollmentRepository.js';
+
 import StudentController from './StudentController.js';
 import TeacherController from './TeacherController.js';
 import CourseController from './CourseController.js';
@@ -42,14 +47,23 @@ class CLIController {
 
          // Initialize repositories
          const studentRepository = new StudentRespository(this.db);
-         // const teacherRepository = new TeacherRepository(this.db);
-         // const courseRepository = new CourseRepository(this.db);
+         const teacherRepository = new TeacherRepository(this.db);
+         const courseRepository = new CourseRepository(this.db);
+         const assignmentRepository = new AssignmentRepository(this.db);
+         const examRepository = new ExamRepository(this.db);
+         const enrollmentRepository = new EnrollmentRepository(this.db);
 
          // Initialize controllers with repositories
          this.studentController = new StudentController(studentRepository);
-         // this.teacherController = new TeacherController(teacherRepository);
-         // this.courseController = new CourseController(courseRepository);
-         // this.enrollmentController = new EnrollmentController(this.db, studentRepository, courseRepository, teacherRepository);
+         this.teacherController = new TeacherController(teacherRepository);
+         this.courseController = new CourseController(courseRepository, assignmentRepository, examRepository);
+         this.enrollmentController = new EnrollmentController(
+            enrollmentRepository,
+            studentRepository,
+            courseRepository,
+            assignmentRepository,
+            examRepository
+         );
 
          console.log(chalk.green('✅ System initialized successfully!'));
          readlineSync.question('\nPress Enter to continue...');
@@ -146,19 +160,21 @@ class CLIController {
                phone: readlineSync.question(chalk.blue('Enter parent phone: ')),
             }
          };
-         this.studentController.addStudent(studentData);
+         await this.studentController.addStudent(studentData);
+         console.log(chalk.green('✅ Student added successfully!'));
+         readlineSync.question('\nPress Enter to continue...');
       } catch (error) {
          console.log(chalk.red(`\nError adding student: ${error.message}`));
       }
 
-      readlineSync.question('\nPress Enter to continue...');
+      // readlineSync.question('\nPress Enter to continue...');
    }//✅
 
    async viewAllStudents() {
       clear();
       this.view.showHeader();
 
-      const students = this.studentController.getAllStudents();
+      const students = await this.studentController.getAllStudents();
       if (students.length === 0) {
          console.log(chalk.yellow('No students found in the system.'));
       } else {
@@ -173,7 +189,7 @@ class CLIController {
       this.view.showHeader();
 
       const studentId = readlineSync.question(chalk.blue('Enter student ID: '));
-      const student = this.studentController.getStudentById(studentId);
+      const student = await this.studentController.getStudentById(studentId);
 
       if (student) {
          this.view.displayStudentDetails(student, this.schoolSystem);
@@ -189,7 +205,7 @@ class CLIController {
       this.view.showHeader();
 
       const studentId = readlineSync.question(chalk.blue('Enter student ID to update: '));
-      let student = this.studentController.getStudentById(studentId);
+      let student = await this.studentController.getStudentById(studentId);
 
       if (!student) {
          console.log(chalk.red('Student not found!'));
@@ -214,7 +230,9 @@ class CLIController {
                phone: readlineSync.question(chalk.blue(`Enter new parent phone [${student.parentContact.phone}]: `)) || '',
             }
          }
-         this.studentController.updateStudent(studentId, updatedData);
+         await this.studentController.updateStudent(studentId, updatedData);
+         console.log(chalk.green('✅ Student updated successfully!'));
+         readlineSync.question('\nPress Enter to continue...');
       } catch (error) {
          console.log(chalk.red(`\nError updating student: ${error.message}`));
       }
@@ -268,18 +286,18 @@ class CLIController {
             assignedClasses: readlineSync.question(chalk.blue('Enter assigned classes (optional): ')) || 'N/A',
          };
 
-         this.teacherController.addTeacher(teacherData);
+         await this.teacherController.addTeacher(teacherData);
+         console.log(chalk.green('✅ Teacher added successfully!'));
+         readlineSync.question('\nPress Enter to continue...');
       } catch (error) {
          console.log(chalk.red(`\nError adding teacher: ${error.message}`));
       }
-
-      readlineSync.question('\nPress Enter to continue...');
    }//✅
 
    async viewAllTeachers() {
       clear();
       this.view.showHeader();
-      const teachers = this.teacherController.getAllTeachers();
+      const teachers = await this.teacherController.getAllTeachers();
 
       if (teachers.length === 0) {
          console.log(chalk.yellow('No teachers found in the system.'));
@@ -294,7 +312,7 @@ class CLIController {
       this.view.showHeader();
 
       const teacherId = readlineSync.question(chalk.blue('Enter teacher ID: '));
-      const teacher = this.teacherController.getTeacherById(teacherId);
+      const teacher = await this.teacherController.getTeacherById(teacherId);
       if (teacher) {
          this.view.displayTeacherDetails(teacher, this.schoolSystem);
       } else {
@@ -308,7 +326,7 @@ class CLIController {
       this.view.showHeader();
 
       const teacherId = readlineSync.question(chalk.blue('Enter teacher ID to update: '));
-      let teacher = this.teacherController.getTeacherById(teacherId);
+      let teacher = await this.teacherController.getTeacherById(teacherId);
       if (!teacher) {
          console.log(chalk.red('Teacher not found!'));
          readlineSync.question('\nPress Enter to continue...');
@@ -329,11 +347,12 @@ class CLIController {
             subjects: readlineSync.question(chalk.blue(`Enter new subjects (comma separated) [${teacher.subjects.join(', ')}]: `)).split(',').map(s => s.trim()),
             assignedClasses: readlineSync.question(chalk.blue(`Enter new assigned classes [${teacher.assignedClasses}]: `)) || '',
          };
-         this.teacherController.updateTeacher(teacherId, updatedData);
+         await this.teacherController.updateTeacher(teacherId, updatedData);
+         console.log(chalk.green('✅ Teacher updated successfully!'));
+         readlineSync.question('\nPress Enter to continue...');
       } catch (error) {
          console.log(chalk.red(`\nError updating teacher information: ${error.message}`));
       }
-      readlineSync.question('\nPress Enter to continue...');
    }//✅
    //END - Controller Input Teacher
 
@@ -390,18 +409,19 @@ class CLIController {
                room: readlineSync.question(chalk.blue('Enter room: '))
             }
          }
-         this.courseController.addCourse(courseData);
+         await this.courseController.addCourse(courseData);
+         console.log(chalk.green('✅ Course added successfully!'));
+         readlineSync.question('\nPress Enter to continue...');
       } catch (error) {
          console.log(chalk.red(`\nError adding course: ${error.message}`));
       }
-      readlineSync.question('\nPress Enter to continue...');
    } //✅
 
    async viewAllCourses() {
       clear();
       this.view.showHeader();
 
-      const courses = this.courseController.getAllCourses();
+      const courses = await this.courseController.getAllCourses();
       if (courses.length === 0) {
          console.log(chalk.yellow('No courses found in the system'));
       } else {
@@ -416,7 +436,7 @@ class CLIController {
       this.view.showHeader();
 
       const courseId = readlineSync.question(chalk.blue('Enter course ID: '));
-      const course = this.courseController.getCourseById(courseId);
+      const course = await this.courseController.getCourseById(courseId);
 
       if (course) {
          this.view.displayCourseDetails(course);
@@ -432,7 +452,7 @@ class CLIController {
       this.view.showHeader();
 
       const courseId = readlineSync.question(chalk.blue('Enter course ID to update: '));
-      const course = this.courseController.getCourseById(courseId);
+      const course = await this.courseController.getCourseById(courseId);
 
       if (!course) {
          console.log(chalk.red('Course not found!'));
@@ -462,7 +482,7 @@ class CLIController {
          if (!updatedData.schedule.days[0] && !updatedData.schedule.time && !updatedData.schedule.room) {
             delete updatedData.schedule;
          }
-         this.courseController.updateCourse(courseId, updatedData);
+         await this.courseController.updateCourse(courseId, updatedData);
          console.log(chalk.green('\nCourse information updated successfully!'));
       } catch (error) {
          console.log(chalk.red(`\nError updating course: ${error.message}`));

@@ -2,12 +2,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 class DatabaseConfig {
-   constructor(config = {}) {
-      this._host = config.host || process.env.DB_HOST || 'localhost';
-      this._port = config.port || process.env.DB_PORT || 5432;
-      this._database = config.database || process.env.DB_NAME || 'db_school_management';
-      this._user = config.user || process.env.DB_USER || 'postgres';
-      this._password = config.password || process.env.DB_PASSWORD || '';
+   constructor() {
+      this._host = process.env.DB_HOST;
+      this._port = parseInt(process.env.DB_PORT);
+      this._database = process.env.DB_NAME;
+      this._user = process.env.DB_USER;
+      this._password = String(process.env.DB_PASSWORD);
    }
 
    get host() {

@@ -74,7 +74,6 @@ class CLIView {
       console.log(chalk.yellow('Student List:'));
       console.log(chalk.cyan('ID'.padEnd(30) + 'Name'.padEnd(15) + 'Role'.padEnd(15) + 'Grade Level'.padEnd(15) + 'Status'.padEnd(10) + 'Enrolled Courses'.padEnd(20)));
       console.log(chalk.yellow('-'.repeat(90)));
-
       students.forEach((student) => {
          console.log(
             student.id.padEnd(30) +
@@ -84,7 +83,7 @@ class CLIView {
             student.academicStatus.padEnd(10) +
             student.enrolledCourses.length.toString().padEnd(20)
          );
-      });
+      });//✅
 
    }
    displayTeacherList(teachers) {
@@ -110,12 +109,12 @@ class CLIView {
 
    displayCourseList(courses) {
       console.log(chalk.yellow('Course List:\n'));
-      console.log(chalk.cyan('ID'.padEnd(15) + 'Name'.padEnd(30) + 'Code'.padEnd(10) + 'Students'.padEnd(10) + 'Status'));
-      console.log(chalk.yellow('-'.repeat(70)));
+      console.log(chalk.cyan('ID'.padEnd(30) + 'Name'.padEnd(30) + 'Code'.padEnd(10) + 'Students'.padEnd(10) + 'Status'));
+      console.log(chalk.yellow('-'.repeat(90)));
 
       courses.forEach(course => {
          console.log(
-            course.id.padEnd(15) +
+            course.id.padEnd(30) +
             course.name.padEnd(30) +
             course.code.padEnd(10) +
             course.studentCount.toString().padEnd(10) +
@@ -233,69 +232,6 @@ class CLIView {
          });
       }
    }
-
-   // displayStudentReport(report) {
-   //    console.log(chalk.yellow('Student Report:\n'));
-   //    console.log(chalk.cyan('Student:'), report.student.name);
-   //    console.log(chalk.cyan('ID:'), report.student.id);
-   //    console.log(chalk.cyan('School:'), report.student.role);
-   //    console.log(chalk.cyan('Academic Status:'), report.academicSummary.academicStatus);
-   //    console.log(chalk.cyan('Academic Year:'), report.academicYear);
-   //    console.log(chalk.cyan('Report Date:'), report.generatedAt.toLocaleDateString());
-
-   //    // Display course summary
-   //    console.log(chalk.yellow('\nCourse Summary:'));
-   //    console.log(chalk.cyan('Course'.padEnd(30) + 'Code'.padEnd(15) + 'GPA'.padEnd(10) + 'Status'));
-   //    console.log('-'.repeat(70));
-
-   //    report.academicSummary.courses.forEach(course => {
-   //       console.log(
-   //          course.courseName.padEnd(30) +
-   //          course.courseCode.padEnd(15) +
-   //          course.courseGPA.toFixed(2).padEnd(10) +
-   //          course.status
-   //       );
-   //    });
-   // }
-
-   // displayTeacherReport(report) {
-   //    console.log(chalk.yellow('Teacher Report:\n'));
-   //    console.log(chalk.cyan('Teacher:'), report.teacherInfo.name);
-   //    console.log(chalk.cyan('ID:'), report.teacherInfo.id);
-   //    console.log(chalk.cyan('Department:'), report.department);
-   //    console.log(chalk.cyan('Subjects:'), report.subjects.join(', '));
-   //    console.log(chalk.cyan('Teaching Load:'), report.teachingLoad);
-   //    console.log(chalk.cyan('Employment Status:'), report.employmentStatus);
-   //    console.log(chalk.cyan('Report Date:'), new Date().toLocaleDateString());
-   //    console.log(chalk.cyan('Courses Assigned:'));
-
-   //    report.courses.forEach(course => {
-   //       console.log(
-   //          `- ${course.courseName} (${course.courseCode}): ${course.studentCount} students, Assigned at: ${course.assignedAt}`
-   //       );
-   //    });
-   //    console.log(chalk.cyan('Total Assigned Courses:'), report.courses.length);
-   // }
-
-   // displayCourseReport(report) {
-   //    console.log(chalk.yellow('Course Report:\n'));
-   //    console.log(chalk.cyan('Course Name:'), report.course.name);
-   //    console.log(chalk.cyan('Course Code:'), report.course.code);
-   //    console.log(chalk.cyan('Subject:'), report.course.subject);
-   //    console.log(chalk.cyan('Description:'), report.course.description);
-   //    console.log(chalk.cyan('Schedule:'), report.course.schedule);
-   //    console.log(chalk.cyan('Total Students:'), report.course.studentCount);
-   //    console.log(chalk.cyan('Report Date:'), report.generatedAt.toLocaleDateString());
-   //    console.log(chalk.cyan('Assignments:'));
-
-   //    if (report.course.assignments.length === 0) {
-   //       console.log('No assignments found');
-   //    } else {
-   //       report.course.assignments.forEach(assignment => {
-   //          console.log(`- ${assignment.title} (${assignment.dueDate.toLocaleDateString()}): ${assignment.description}`);
-   //       });
-   //    }
-   // }
 
    displayEnhancedCourseReport(report) {
       console.log(chalk.yellow('Enhanced Course Report:\n'));
