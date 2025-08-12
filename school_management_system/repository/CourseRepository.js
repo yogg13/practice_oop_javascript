@@ -209,16 +209,29 @@ class CourseRepository extends BaseRepository {
       course._updatedAt = row.updated_at;
 
       // Add enrolled students (placeholder, will be populated when needed)
-      course._studentCount = row.student_count || 0;
+      // course.studentCount = row.student_count || 0;
 
       // Add teacher if exists
+      // This is a placeholder, the actual teacher object would be set separately
       if (row.teacher_id) {
-         // This is a placeholder, the actual teacher object would be set separately
          course._teacherId = row.teacher_id;
          course._teacherName = row.teacher_name;
       }
 
       // Load enrolled students, assignments, and exams
+      try {
+         // Load assignments
+         const assignments = await this.getAssignments(row.id);
+         course._assignments = assignments || [];
+
+         // Load exams
+         const exams = await this.getExams(row.id);
+         course._exams = exams || [];
+      } catch (error) {
+         console.error(`Error loading course details: ${error.message}`);
+         course._assignments = [];
+         course._exams = [];
+      }
       return course;
    }
 

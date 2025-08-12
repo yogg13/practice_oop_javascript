@@ -110,7 +110,6 @@ class CLIView {
       console.log(chalk.yellow('Course List:\n'));
       console.log(chalk.cyan('ID'.padEnd(30) + 'Name'.padEnd(30) + 'Code'.padEnd(10) + 'Students'.padEnd(10) + 'Status'));
       console.log(chalk.yellow('-'.repeat(90)));
-
       courses.forEach(course => {
          console.log(
             course.id.padEnd(30) +
@@ -216,8 +215,8 @@ class CLIView {
       if (course.assignments.length === 0) {
          console.log('No assignments created for this course');
       } else {
-         course.assignments.forEach(assignment => {
-            console.log(`- ${assignment.title} (Due: ${assignment.dueDate.toLocaleDateString()}, Max Score: ${assignment.maxScore})`);
+         course.assignments.forEach((assignment, index) => {
+            console.log(`${index + 1}. ${assignment.title} (${assignment.type}) - (Due: ${assignment.due_date.toLocaleDateString()}, Min Score: ${assignment.min_score})`);
          });
       }
 
@@ -226,8 +225,8 @@ class CLIView {
       if (course.exams.length === 0) {
          console.log('No exams scheduled for this course');
       } else {
-         course.exams.forEach(exam => {
-            console.log(`- ${exam.title} (${exam.date.toLocaleDateString()}, Duration: ${exam.duration} mins, Max Score: ${exam.maxScore})`);
+         course.exams.forEach((exam, index) => {
+            console.log(`${index + 1}. ${exam.title} (${exam.exam_type}) - (Due: ${exam.exam_date.toLocaleDateString()}, Duration: ${exam.duration} mins, Min Score: ${exam.min_score})`);
          });
       }
    }//✅

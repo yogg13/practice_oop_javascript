@@ -11,7 +11,8 @@ class Course {
       this._code = code;
       this._description = description;
       this._schedule = schedule;
-      this._teacher = null;
+      this._teacherId = null;
+      this._teacherName = null;
       this._enrolledStudents = new Map();
       this._assignments = new Map();
       this._exams = new Map();
@@ -27,12 +28,16 @@ class Course {
    get code() { return this._code; }
    get description() { return this._description; }
    get schedule() { return { ...this._schedule }; }
-   get teacher() { return this._teacher; }
+   get teacherId() { return this._teacherId; };
+   get teacherName() { return this._teacherName; }
    get enrolledStudents() { return Array.from(this._enrolledStudents.values()); }
    get assignments() { return Array.from(this._assignments.values()); }
    get exams() { return Array.from(this._exams.values()); }
    get status() { return this._status; }
    get studentCount() { return this._enrolledStudents.size; }
+   get teacherInfo() {
+      return this._teacherName ? `${this._teacherName} (${this._teacherId})` : 'Not Assigned';
+   }
 
    // Setters
    set name(newName) {
@@ -76,7 +81,13 @@ class Course {
       this._status = newStatus;
       this._updateTimestamp();
    }
-
+   // set studentCount(count) {
+   //    if (typeof count !== 'number' || count < 0) {
+   //       throw new Error("Invalid student count");
+   //    }
+   //    this._studentCount = count;
+   //    this._updateTimestamp();
+   // }
 
    _generateCourseId() {
       return `CRS-${Math.random().toString(36).substring(2, 9)}`;

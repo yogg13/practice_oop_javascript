@@ -436,8 +436,8 @@ class CLIController {
       this.view.showHeader();
 
       const courseId = readlineSync.question(chalk.blue('Enter course ID: '));
-      const course = await this.courseController.getCourseById(courseId);
 
+      const course = await this.courseController.getCourseById(courseId);
       if (course) {
          this.view.displayCourseDetails(course);
       } else {
@@ -517,6 +517,7 @@ class CLIController {
             title: readlineSync.question(chalk.blue('Enter assignment title: ')),
             description: readlineSync.question(chalk.blue('Enter assignment description: ')),
             dueDate: readlineSync.question(chalk.blue('Enter due date (YYYY-MM-DD): ')),
+            minScore: parseInt(readlineSync.question(chalk.blue('Enter minimum score: '))) || 50,
             maxScore: parseInt(readlineSync.question(chalk.blue('Enter maximum score: '))) || 100,
             type: readlineSync.question(chalk.blue('Enter assignment type (assignment/quiz): ')) || 'assignment'
          };
