@@ -13,9 +13,10 @@ class Course {
       this._schedule = schedule;
       this._teacherId = null;
       this._teacherName = null;
-      this._enrolledStudents = new Map();
-      this._assignments = new Map();
-      this._exams = new Map();
+      this._enrolledStudents = [];
+      this._assignments = [];
+      this._exams = [];
+      this._studentCount = 0;
       this._status = 'active'; // active, completed, cancelled
       this._createdAt = new Date();
       this._updatedAt = new Date();
@@ -30,11 +31,11 @@ class Course {
    get schedule() { return { ...this._schedule }; }
    get teacherId() { return this._teacherId; };
    get teacherName() { return this._teacherName; }
-   get enrolledStudents() { return Array.from(this._enrolledStudents.values()); }
-   get assignments() { return Array.from(this._assignments.values()); }
-   get exams() { return Array.from(this._exams.values()); }
+   get enrolledStudents() { return this._enrolledStudents; }
+   get assignments() { return this._assignments; }
+   get exams() { return this._exams; }
    get status() { return this._status; }
-   get studentCount() { return this._enrolledStudents.size; }
+   get studentCount() { return this._enrolledStudents ? this._enrolledStudents.length : this._studentCount; }
    get teacherInfo() {
       return this._teacherName ? `${this._teacherName} (${this._teacherId})` : 'Not Assigned';
    }
@@ -81,13 +82,10 @@ class Course {
       this._status = newStatus;
       this._updateTimestamp();
    }
-   // set studentCount(count) {
-   //    if (typeof count !== 'number' || count < 0) {
-   //       throw new Error("Invalid student count");
-   //    }
-   //    this._studentCount = count;
-   //    this._updateTimestamp();
-   // }
+   set studentCount(count) {
+      this._studentCount = count;
+      this._updateTimestamp();
+   }
 
    _generateCourseId() {
       return `CRS-${Math.random().toString(36).substring(2, 9)}`;
@@ -145,7 +143,7 @@ class Course {
 
       this._updateTimestamp();
       return true;
-   }
+   }//❌
 
    createAssignment(title, description, dueDate, minScore, maxScore, type = 'assignment') {
       const assignment = new Assignment(title, description, dueDate, minScore, maxScore, type, this._id);
@@ -168,7 +166,7 @@ class Course {
 
       const student = this._enrolledStudents.get(studentId).student;
       return student.getGradesForCourse(this._id);
-   }
+   }//❌
 
    getCourseInfo() {
       return {
@@ -186,7 +184,7 @@ class Course {
          createdAt: this._createdAt,
          updatedAt: this._updatedAt
       };
-   }
+   }//❌
 }
 
 export default Course;

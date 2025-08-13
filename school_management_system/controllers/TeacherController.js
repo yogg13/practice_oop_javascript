@@ -62,7 +62,7 @@ class TeacherController {
          },
          generatedAt: new Date()
       };
-   }
+   }//❌
 }
 
 export default TeacherController;

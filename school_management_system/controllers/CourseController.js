@@ -7,7 +7,7 @@ class CourseController {
 
    async getAllCourses() {
       return await this._courseRepository.getAllCourses();
-   }
+   }//✅
 
    async getCourseById(courseId) {
       return await this._courseRepository.getCourseById(courseId);
@@ -21,7 +21,7 @@ class CourseController {
          console.error(`❌ Failed to add course: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
 
    async updateCourse(courseId, updatedData) {
       try {
@@ -31,7 +31,7 @@ class CourseController {
          console.error(`❌ Failed to update course: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
 
    async assignTeacherToCourse(courseId, teacherId) {
       try {
@@ -42,7 +42,7 @@ class CourseController {
          console.error(`❌ Failed to assign teacher to course: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
 
    async addAssignmentToCourse(courseId, assignmentData) {
       try {
@@ -62,7 +62,7 @@ class CourseController {
          console.error(`❌ Failed to add assignment: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
 
    async addExamToCourse(courseId, examData) {
       try {
@@ -82,7 +82,67 @@ class CourseController {
          console.error(`❌ Failed to add exam: ${error.message}`);
          throw error;
       }
-   }
+   }//✅
+
+   async recordAssignmentGrade(assignmentId, studentId, score, submissionContent = "") {
+      try {
+         if (!assignmentId || !studentId || score === undefined) {
+            throw new Error("Missing required parameters");
+         }
+
+         const assignment = await this._assignmentRepository.getAssignmentById(assignmentId);
+         if (!assignment) {
+            throw new Error(`Assignment with ID ${assignmentId} not found`);
+         }
+
+         if (score < 0 || score > assignment.max_score) {
+            throw new Error(`Score must be between 0 and ${assignment.max_score}`);
+         }
+
+         const submission = await this._assignmentRepository.getStudentSubmission(assignmentId, studentId);
+
+         if (!submission) {
+            await this._assignmentRepository.createSubmission({
+               assignment_id: assignmentId,
+               student_id: studentId,
+               content: submissionContent,
+               submitted_at: new Date(),
+               status: "submitted"
+            });
+         }
+
+         await this._assignmentRepository.gradeAssignment(assignmentId, studentId, score);
+
+         return true;
+      } catch (error) {
+         console.error(`Error recording assignment grade: ${error.message}`);
+         throw error;
+      }
+   }//✅
+
+   async recordExamGrade(examId, studentId, score) {
+      try {
+         if (!examId || !studentId || score === undefined) {
+            throw new Error("Missing required parameters");
+         }
+
+         const exam = await this._examRepository.getExamById(examId);
+         if (!exam) {
+            throw new Error(`Exam with ID ${examId} not found`);
+         }
+
+         if (score < 0 || score > exam.max_score) {
+            throw new Error(`Score must be between 0 and ${exam.max_score}`);
+         }
+
+         const result = await this._examRepository.recordExamGrade(examId, studentId, score);
+
+         return result;
+      } catch (error) {
+         console.error(`Error recording exam grade: ${error.message}`);
+         throw error;
+      }
+   }//✅
 
    async generateCourseReport(courseId) {
       try {
@@ -142,7 +202,7 @@ class CourseController {
          console.error(`❌ Failed to generate course report: ${error.message}`);
          throw error;
       }
-   }
+   }//❌
 }
 
 export default CourseController;

@@ -61,8 +61,7 @@ class CLIController {
             enrollmentRepository,
             studentRepository,
             courseRepository,
-            assignmentRepository,
-            examRepository
+            teacherRepository
          );
 
          console.log(chalk.green('✅ System initialized successfully!'));
@@ -528,7 +527,7 @@ class CLIController {
          console.log(chalk.red(`\nError: ${error.message}`));
       }
       readlineSync.question('\nPress Enter to continue...');
-   }//
+   }//✅
 
    async addExamToCourse() {
       clear();
@@ -569,7 +568,7 @@ class CLIController {
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }//
+   }//✅
    //END - Controller Input Course
 
    //START - Controller Input Enrollment
@@ -586,7 +585,7 @@ class CLIController {
                await this.enrollStudent();
                break;
             case '2':
-               await this.assignTeacher();
+               await this.assignTeacherToCourse();
                break;
             case '3':
                await this.recordStudentGrade();
@@ -598,7 +597,7 @@ class CLIController {
                readlineSync.question('Press Enter to continue...');
          }
       }
-   }
+   }//✅
 
    // Metode untuk enroll student ke course
    async enrollStudent() {
@@ -607,7 +606,7 @@ class CLIController {
 
       try {
          // List all students
-         const students = this.studentController.getAllStudents();
+         const students = await this.studentController.getAllStudents();
          if (students.length === 0) {
             throw new Error("No students found in the system");
          }
@@ -623,7 +622,7 @@ class CLIController {
          }
 
          // List all courses
-         const courses = this.courseController.getAllCourses();
+         const courses = await this.courseController.getAllCourses();
          if (courses.length === 0) {
             throw new Error("No courses found in the system");
          }
@@ -639,98 +638,47 @@ class CLIController {
          }
 
          // Enroll student in course
-         this.enrollmentController.enrollStudentInCourse(students[studentIndex].id, courses[courseIndex].id);
-         console.log(chalk.green('\nStudent successfully enrolled in the course!'));
+         await this.enrollmentController.enrollStudentInCourse(students[studentIndex].id, courses[courseIndex].id);
+         console.log(chalk.green('\n✅ Student successfully enrolled in the course!'));
 
       } catch (error) {
          console.log(chalk.red(`\nError: ${error.message}`));
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
 
    // Metode untuk assign teacher ke course
-   async assignTeacher() {
+   async assignTeacherToCourse() {
       clear();
       this.view.showHeader('Assign Teacher to Course');
 
       try {
-         // Get all teachers
-         const teachers = this.teacherController.getAllTeachers();
-         if (teachers.length === 0) {
-            throw new Error("No teachers found in the system");
-         }
+         // 1. Get available   courses
+         const courses = await this.courseController.getAllCourses();
+         console.log(chalk.yellow('\nAvailable Courses:'));
+         this.view.displayCourseList(courses);
 
-         // Display available teachers
-         console.log(chalk.yellow("\nAvailable Teachers:"));
-         teachers.forEach((teacher, index) => {
-            console.log(`${index + 1}. ${teacher.name} - ${teacher.department} (Subjects: ${teacher.subjects.join(', ')})`);
-         });
+         // 2. Get course ID
+         const courseId = readlineSync.question(chalk.blue('\nEnter course ID: '));
 
-         // Select teacher
-         const teacherIndex = parseInt(readlineSync.question(chalk.blue('\nSelect teacher number: '))) - 1;
-         if (teacherIndex < 0 || teacherIndex >= teachers.length) {
-            throw new Error("Invalid teacher selection");
-         }
+         // 3. Get available teachers
+         const teachers = await this.teacherController.getAllTeachers();
+         console.log(chalk.yellow('\nAvailable Teachers:'));
+         this.view.displayTeacherList(teachers);
 
-         // Get all courses
-         const courses = this.courseController.getAllCourses();
-         if (courses.length === 0) {
-            throw new Error("No courses found in the system");
-         }
+         // 4. Get teacher ID
+         const teacherId = readlineSync.question(chalk.blue('\nEnter teacher ID: '));
 
-         // Filter courses based on teacher subjects
-         const teacher = teachers[teacherIndex];
-         const eligibleCourses = courses.filter(course =>
-            teacher.subjects.some(subject =>
-               subject.toLowerCase() === course.subject.toLowerCase()
-            )
-         );
-
-         if (eligibleCourses.length === 0) {
-            throw new Error(`No courses found matching ${teacher.name}'s subjects (${teacher.subjects.join(', ')})`);
-         }
-
-         // Display eligible courses
-         console.log(chalk.yellow("\nEligible Courses:"));
-         eligibleCourses.forEach((course, index) => {
-            console.log(`${index + 1}. ${course.name} (${course.code}) - Subject: ${course.subject}`);
-         });
-
-         // Select course
-         const courseIndex = parseInt(readlineSync.question(chalk.blue('\nSelect course number: '))) - 1;
-         if (courseIndex < 0 || courseIndex >= eligibleCourses.length) {
-            throw new Error("Invalid course selection");
-         }
-
-         const course = eligibleCourses[courseIndex];
-
-         // Confirm assignment
-         if (course.teacher) {
-            const confirmReplace = readlineSync.keyInYNStrict(
-               chalk.yellow(`\nThis course already has a teacher assigned (${course.teacher.name}). Replace?`)
-            );
-            if (!confirmReplace) {
-               console.log(chalk.yellow('\nTeacher assignment cancelled.'));
-               readlineSync.question('\nPress Enter to continue...');
-               return;
-            }
-         }
-
-         // Assign teacher to course
-         try {
-            course.assignTeacher(teacher);
-            console.log(chalk.green(`\n✅ Successfully assigned ${teacher.name} to ${course.name}`));
-         } catch (error) {
-            console.log(chalk.red(`\n❌ Error: ${error.message}`));
-         }
-
+         // 5. Assign teacher to course
+         await this.enrollmentController.assignTeacherToCourse(teacherId, courseId);
+         console.log(chalk.green(`\n✅ Teacher assigned to course successfully`));
       } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
+         console.error(chalk.red(`\n❌ Error assigning teacher: ${error.message}`));
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
 
    // Metode untuk record student grades
    async recordStudentGrade() {
@@ -738,46 +686,69 @@ class CLIController {
       this.view.showHeader('Record Student Grade');
 
       try {
-         // Get all courses
-         const courses = this.courseController.getAllCourses();
+         const courses = await this.courseController.getAllCourses();
          if (courses.length === 0) {
             throw new Error("No courses found in the system");
          }
 
-         // Display courses
          console.log(chalk.yellow("\nSelect a Course:"));
          courses.forEach((course, index) => {
-            console.log(`${index + 1}. ${course.name} (${course.code}) - ${course.studentCount} students`);
+            console.log(`${index + 1}. ${course.name} (${course.code}) - ${course._studentCount} students`);
          });
 
-         // Select course
          const courseIndex = parseInt(readlineSync.question(chalk.blue('\nSelect course number: '))) - 1;
          if (courseIndex < 0 || courseIndex >= courses.length) {
             throw new Error("Invalid course selection");
          }
 
-         const course = courses[courseIndex];
+         // FIX 1: Gunakan properti id, bukan student
+         const courseId = courses[courseIndex].id;
+         console.log(`Getting details for course ID: ${courseId}`);
 
-         // Check if course has students
-         if (course.enrolledStudents.length === 0) {
-            throw new Error(`No students enrolled in ${course.name}`);
+         // Get full course details with enrollments
+         const course = await this.courseController.getCourseById(courseId);
+         console.log(`Course details loaded: ${course.name}`);
+         // Debug info
+         console.log(`Student count: ${course._studentCount}, Has enrollments: ${course._enrolledStudents ? course._enrolledStudents.length : 'none'}`);
+
+         // FIX 2: Cek ketersediaan enrolled students dengan benar
+         if (!course._enrolledStudents || course._enrolledStudents.length === 0) {
+            // Query students manually if none were loaded
+            console.log("Loading enrolled students from database...");
+            const enrolledStudents = await this.enrollmentController.getCourseEnrollments(courseId);
+
+            if (!enrolledStudents || enrolledStudents.length === 0) {
+               throw new Error(`No students enrolled in ${course.name}`);
+            }
+
+            console.log(`Found ${enrolledStudents.length} enrolled students`);
+            course._enrolledStudents = enrolledStudents;
          }
 
-         // Display enrolled students
          console.log(chalk.yellow("\nEnrolled Students:"));
-         course.enrolledStudents.forEach((enrollment, index) => {
-            console.log(`${index + 1}. ${enrollment.student.name} (${enrollment.student.id}) - Status: ${enrollment.status}`);
+         course._enrolledStudents.forEach((enrollment, index) => {
+            // FIX 3: Akses data student dengan benar
+            const studentName = enrollment.student_name || enrollment.student?.name || "Unknown Student";
+            const studentId = enrollment.student_id || enrollment.student?.id || "Unknown ID";
+            console.log(`${index + 1}. ${studentName} (${studentId})`);
          });
 
-         // Select student
          const studentIndex = parseInt(readlineSync.question(chalk.blue('\nSelect student number: '))) - 1;
-         if (studentIndex < 0 || studentIndex >= course.enrolledStudents.length) {
+         if (studentIndex < 0 || studentIndex >= course._enrolledStudents.length) {
             throw new Error("Invalid student selection");
          }
 
-         const student = course.enrolledStudents[studentIndex].student;
+         // FIX 4: Akses data student dengan benar
+         const enrollment = course._enrolledStudents[studentIndex];
+         // console.log("Fix-4 Enrollment details:", enrollment);
+         const student = {
+            id: enrollment.student?.id,
+            name: enrollment.student?.name,
+            gradeLevel: enrollment.student?.gradeLevel,
+            status: enrollment.status,
+            enrolledAt: enrollment.enrolledAt,
+         };
 
-         // Select grade type
          console.log(chalk.yellow("\nSelect Grade Type:"));
          console.log("1. Assignment");
          console.log("2. Exam");
@@ -785,20 +756,16 @@ class CLIController {
          const gradeTypeChoice = readlineSync.question(chalk.blue('Enter choice: '));
 
          if (gradeTypeChoice === '1') {
-            // Assignment grades
 
-            // Check if course has assignments
             if (course.assignments.length === 0) {
                throw new Error(`No assignments created for ${course.name}`);
             }
 
-            // Display assignments
             console.log(chalk.yellow("\nAvailable Assignments:"));
             course.assignments.forEach((assignment, index) => {
-               console.log(`${index + 1}. ${assignment.title} (Due: ${assignment.dueDate.toLocaleDateString()}, Max: ${assignment.maxScore})`);
+               console.log(`${index + 1}. ${assignment.title} (Due: ${assignment.due_date.toLocaleDateString()}, Min Score: ${assignment.min_score})`);
             });
 
-            // Select assignment
             const assignmentIndex = parseInt(readlineSync.question(chalk.blue('\nSelect assignment number: '))) - 1;
             if (assignmentIndex < 0 || assignmentIndex >= course.assignments.length) {
                throw new Error("Invalid assignment selection");
@@ -806,48 +773,44 @@ class CLIController {
 
             const assignment = course.assignments[assignmentIndex];
 
-            // Enter score
             const score = parseFloat(readlineSync.question(chalk.blue(`\nEnter score (0-${assignment.maxScore}): `)));
             if (isNaN(score) || score < 0 || score > assignment.maxScore) {
                throw new Error(`Score must be between 0 and ${assignment.maxScore}`);
             }
-
-            // Record submission and grade
             try {
-               // First record submission
-               assignment.submitAssignment(student.id, "Submitted via teacher input", new Date());
-               // Then grade it
-               assignment.gradeAssignment(student.id, score);
-
-               // Add to student's grades
-               student.addGrade(course.id, {
-                  type: 'assignment',
-                  title: assignment.title,
+               const submissionData = {
+                  student_id: student.id,
+                  assignment_id: assignment.id,
+                  submitted_at: new Date(),
+                  content: "Submitted via teacher input",
                   score: score,
-                  maxScore: assignment.maxScore,
-                  date: new Date()
-               });
+                  status: "graded"
+               };
 
-               console.log(chalk.green(`\n✅ Successfully recorded grade of ${score}/${assignment.maxScore} for ${student.name} on ${assignment.title}`));
+               // Gunakan CourseController untuk menyimpan nilai tugas
+               await this.courseController.recordAssignmentGrade(
+                  assignment.id,
+                  student.id,
+                  score,
+                  "Submitted via teacher input"
+               );
+
+               console.log(chalk.green(`\n✅ Successfully recorded grade of ${score}/${assignment.max_score} for ${student.name} on ${assignment.title}`));
             } catch (error) {
                console.log(chalk.red(`\n❌ Error recording grade: ${error.message}`));
             }
 
          } else if (gradeTypeChoice === '2') {
-            // Exam grades
 
-            // Check if course has exams
             if (course.exams.length === 0) {
                throw new Error(`No exams created for ${course.name}`);
             }
 
-            // Display exams
             console.log(chalk.yellow("\nAvailable Exams:"));
             course.exams.forEach((exam, index) => {
-               console.log(`${index + 1}. ${exam.title} (Date: ${exam.date.toLocaleDateString()}, Max: ${exam.maxScore})`);
+               console.log(`${index + 1}. ${exam.title} (Date: ${exam.exam_date.toLocaleDateString()}, Max: ${exam.max_score})`);
             });
 
-            // Select exam
             const examIndex = parseInt(readlineSync.question(chalk.blue('\nSelect exam number: '))) - 1;
             if (examIndex < 0 || examIndex >= course.exams.length) {
                throw new Error("Invalid exam selection");
@@ -855,31 +818,18 @@ class CLIController {
 
             const exam = course.exams[examIndex];
 
-            // Enter score
-            const score = parseFloat(readlineSync.question(chalk.blue(`\nEnter score (0-${exam.maxScore}): `)));
-            if (isNaN(score) || score < 0 || score > exam.maxScore) {
-               throw new Error(`Score must be between 0 and ${exam.maxScore}`);
+            const score = parseFloat(readlineSync.question(chalk.blue(`\nEnter score (0-${exam.max_score}): `)));
+            if (isNaN(score) || score < 0 || score > exam.max_score) {
+               throw new Error(`Score must be between 0 and ${exam.max_score}`);
             }
-
-            // Record exam result
             try {
-               const startTime = new Date();
-               startTime.setHours(startTime.getHours() - exam.duration / 60);
-               const endTime = new Date();
 
-               // Record result in exam
-               exam.recordResult(student.id, score, startTime, endTime);
-
-               // Add to student's grades
-               student.addGrade(course.id, {
-                  type: 'exam',
-                  title: exam.title,
-                  score: score,
-                  maxScore: exam.maxScore,
-                  date: new Date()
-               });
-
-               console.log(chalk.green(`\n✅ Successfully recorded exam score of ${score}/${exam.maxScore} for ${student.name} on ${exam.title}`));
+               await this.courseController.recordExamGrade(
+                  exam.id,
+                  student.id,
+                  score
+               );
+               console.log(chalk.green(`\n✅ Successfully recorded exam score of ${score}/${exam.max_score} for ${student.name} on ${exam.title}`));
             } catch (error) {
                console.log(chalk.red(`\n❌ Error recording exam result: ${error.message}`));
             }
@@ -893,493 +843,8 @@ class CLIController {
       }
 
       readlineSync.question('\nPress Enter to continue...');
-   }
+   }//✅
    //END - Controller Input Enrollment
-
-   //START - Controller Input Report
-   async reportMenu() {
-      while (true) {
-         clear();
-         this.view.showHeader('Report Generation');
-         this.view.showReportMenu();
-
-         const choice = readlineSync.question(chalk.yellow('Select an option: '));
-
-         switch (choice) {
-            case '1':
-               await this.studentReportMenu();
-               break;
-            case '2':
-               await this.teacherReportMenu();
-               break;
-            case '3':
-               await this.courseReportMenu();
-               break;
-            case '4':
-               await this.generateSystemOverview();
-               break;
-            case '0':
-               return;
-            default:
-               console.log(chalk.red('Invalid option. Please try again.'));
-               readlineSync.question('Press Enter to continue...');
-         }
-      }
-   }
-
-   //Student Report Menu
-   async studentReportMenu() {
-      clear();
-      this.view.showHeader('Student Report Options');
-      console.log('1. Generate Individual Student Report');
-      console.log('2. Generate All Students Summary');
-      // console.log('3. Generate Grade Level Report');
-      // console.log('4. Generate Student Achievement Report');
-      console.log('0. Back to Reports Menu');
-      console.log(chalk.yellow('-'.repeat(70)));
-
-      const choice = readlineSync.question(chalk.yellow('Select an option: '));
-
-      switch (choice) {
-         case '1':
-            await this.generateIndividualStudentReport();
-            break;
-         case '2':
-            await this.generateAllStudentsSummary();
-            break;
-         // case '3':
-         //    await this.generateGradeLevelReport();
-         //    break;
-         // case '4':
-         //    await this.generateStudentAchievementReport();
-         //    break;
-         case '0':
-            return;
-         default:
-            console.log(chalk.red('Invalid option. Please try again.'));
-            readlineSync.question('Press Enter to continue...');
-      }
-   }
-
-   // Teacher Report Menu
-   async teacherReportMenu() {
-      clear();
-      this.view.showHeader('Teacher Report Options');
-      console.log('1. Generate Individual Teacher Report');
-      console.log('2. Generate Department Summary');
-      console.log('3. Generate Teaching Load Report');
-      console.log('0. Back to Reports Menu');
-      console.log(chalk.yellow('-'.repeat(70)));
-
-      const choice = readlineSync.question(chalk.yellow('Select an option: '));
-
-      switch (choice) {
-         case '1':
-            await this.generateIndividualTeacherReport();
-            break;
-         // case '2':
-         //    await this.generateDepartmentSummary();
-         //    break;
-         // case '3':
-         //    await this.generateTeachingLoadReport();
-         //    break;
-         case '0':
-            return;
-         default:
-            console.log(chalk.red('Invalid option. Please try again.'));
-            readlineSync.question('Press Enter to continue...');
-      }
-   }
-
-   // Course Report Menu
-   async courseReportMenu() {
-      clear();
-      this.view.showHeader('Course Report Options');
-      console.log('1. Generate Individual Course Report');
-      console.log('2. Generate Course Enrollment Summary');
-      // console.log('3. Generate Course Performance Report');
-      console.log('0. Back to Reports Menu');
-      console.log(chalk.yellow('-'.repeat(70)));
-
-      const choice = readlineSync.question(chalk.yellow('Select an option: '));
-
-      switch (choice) {
-         case '1':
-            await this.generateIndividualCourseReport();
-            break;
-         case '2':
-            await this.generateCourseEnrollmentSummary();
-            break;
-         // case '3':
-         //    await this.generateCoursePerformanceReport();
-         //    break;
-         case '0':
-            return;
-         default:
-            console.log(chalk.red('Invalid option. Please try again.'));
-            readlineSync.question('Press Enter to continue...');
-      }
-   }
-
-   // Implementasi untuk Individual Student Report (dengan seleksi siswa yang ditingkatkan)
-   async generateIndividualStudentReport() {
-      clear();
-      this.view.showHeader('Generate Individual Student Report');
-
-      try {
-         // Get all students
-         const students = this.studentController.getAllStudents();
-         if (students.length === 0) {
-            throw new Error("No students found in the system");
-         }
-
-         // Display list of students
-         console.log(chalk.yellow("\nSelect a student:"));
-         students.forEach((student, index) => {
-            console.log(`${index + 1}. ${student.name} (${student.id}) - Grade ${student.gradeLevel}`);
-         });
-
-         // Let user select a student
-         const studentIndex = parseInt(readlineSync.question(chalk.blue('\nEnter student number: '))) - 1;
-         if (studentIndex < 0 || studentIndex >= students.length) {
-            throw new Error("Invalid student selection");
-         }
-
-         // Generate and display report
-         const studentId = students[studentIndex].id;
-         const report = this.studentController.generateStudentReport(studentId);
-
-         // Add academic year to report
-         report.academicYear = this.schoolSystem.academicYear;
-
-         this.view.displayStudentReport(report);
-
-         // Offer to export report
-         if (readlineSync.keyInYNStrict(chalk.blue('\nWould you like to export this report?'))) {
-            // Simple export - in real app, would write to file
-            console.log(chalk.green('\nReport exported successfully!'));
-            console.log(chalk.gray('(In a real application, this would save to a file)'));
-         }
-
-      } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
-      }
-
-      readlineSync.question('\nPress Enter to continue...');
-   }
-
-   // Implementasi untuk All Students Summary
-   async generateAllStudentsSummary() {
-      clear();
-      this.view.showHeader('All Students Summary');
-
-      try {
-         const students = this.studentController.getAllStudents();
-         if (students.length === 0) {
-            throw new Error("No students found in the system");
-         }
-
-         // Calculate statistics
-         const stats = {
-            totalStudents: students.length,
-            byGradeLevel: {
-               '10': students.filter(s => s.gradeLevel === '10').length,
-               '11': students.filter(s => s.gradeLevel === '11').length,
-               '12': students.filter(s => s.gradeLevel === '12').length
-            },
-            byStatus: {
-               active: students.filter(s => s.academicStatus === 'active').length,
-               suspended: students.filter(s => s.academicStatus === 'suspended').length,
-               graduated: students.filter(s => s.academicStatus === 'graduated').length,
-               transferred: students.filter(s => s.academicStatus === 'transferred').length
-            },
-            averageCoursesPerStudent: students.reduce((sum, student) => sum + student.enrolledCourses.length, 0) / students.length
-         };
-
-         // Display the summary report
-         console.log(chalk.cyan(`\nTotal Students: ${stats.totalStudents}`));
-         console.log(chalk.cyan(`Academic Year: ${this.schoolSystem.academicYear}`));
-
-         console.log(chalk.yellow('\nDistribution by Grade Level:'));
-         console.log(`Grade 10: ${stats.byGradeLevel['10']} students`);
-         console.log(`Grade 11: ${stats.byGradeLevel['11']} students`);
-         console.log(`Grade 12: ${stats.byGradeLevel['12']} students`);
-
-         console.log(chalk.yellow('\nDistribution by Status:'));
-         console.log(`Active: ${stats.byStatus.active} students`);
-         console.log(`Suspended: ${stats.byStatus.suspended} students`);
-         console.log(`Graduated: ${stats.byStatus.graduated} students`);
-         console.log(`Transferred: ${stats.byStatus.transferred} students`);
-
-         console.log(chalk.yellow('\nCourse Enrollment:'));
-         console.log(`Average Courses per Student: ${stats.averageCoursesPerStudent.toFixed(1)}`);
-
-         // Display top 5 students by GPA (if there are courses and grades)
-         const studentsWithGPA = students.filter(student => student.enrolledCourses.length > 0);
-         if (studentsWithGPA.length > 0) {
-            console.log(chalk.yellow('\nTop 5 Students by Overall GPA:'));
-
-            // Calculate overall GPA for each student
-            const studentsWithOverallGPA = studentsWithGPA.map(student => {
-               const courseGPAs = student.enrolledCourses.map(course =>
-                  student.calculateCourseGPA(course.course.id)
-               );
-               const overallGPA = courseGPAs.reduce((sum, gpa) => sum + gpa, 0) / courseGPAs.length;
-
-               return {
-                  id: student.id,
-                  name: student.name,
-                  gradeLevel: student.gradeLevel,
-                  overallGPA
-               };
-            });
-
-            // Sort and display top 5
-            studentsWithOverallGPA
-               .sort((a, b) => b.overallGPA - a.overallGPA)
-               .slice(0, 5)
-               .forEach((student, index) => {
-                  console.log(`${index + 1}. ${student.name} (Grade ${student.gradeLevel}) - GPA: ${student.overallGPA.toFixed(2)}`);
-               });
-         }
-
-      } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
-      }
-
-      readlineSync.question('\nPress Enter to continue...');
-   }
-
-   // Implementasi Individual Teacher Report
-   async generateIndividualTeacherReport() {
-      clear();
-      this.view.showHeader('Generate Individual Teacher Report');
-
-      try {
-         // Get all teachers
-         const teachers = this.teacherController.getAllTeachers();
-         if (teachers.length === 0) {
-            throw new Error("No teachers found in the system");
-         }
-
-         // Display list of teachers
-         console.log(chalk.yellow("\nSelect a teacher:"));
-         teachers.forEach((teacher, index) => {
-            console.log(`${index + 1}. ${teacher.name} - ${teacher.department} Department (${teacher.id})`);
-         });
-
-         // Let user select a teacher
-         const teacherIndex = parseInt(readlineSync.question(chalk.blue('\nEnter teacher number: '))) - 1;
-         if (teacherIndex < 0 || teacherIndex >= teachers.length) {
-            throw new Error("Invalid teacher selection");
-         }
-
-         // Generate and display report
-         const teacherId = teachers[teacherIndex].id;
-         const report = this.teacherController.generateTeacherReport(teacherId);
-
-         // Display the report
-         this.view.displayTeacherReport(report.teachingSummary);
-
-      } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
-      }
-
-      readlineSync.question('\nPress Enter to continue...');
-   }
-
-   // Implementasi Individual Course Report
-   async generateIndividualCourseReport() {
-      clear();
-      this.view.showHeader('Generate Individual Course Report');
-
-      try {
-         // Get all courses
-         const courses = this.courseController.getAllCourses();
-         if (courses.length === 0) {
-            throw new Error("No courses found in the system");
-         }
-
-         // Display list of courses
-         console.log(chalk.yellow("\nSelect a course:"));
-         courses.forEach((course, index) => {
-            console.log(`${index + 1}. ${course.name} (${course.code}) - ${course.studentCount} students`);
-         });
-
-         // Let user select a course
-         const courseIndex = parseInt(readlineSync.question(chalk.blue('\nEnter course number: '))) - 1;
-         if (courseIndex < 0 || courseIndex >= courses.length) {
-            throw new Error("Invalid course selection");
-         }
-
-         // Generate and display report
-         const courseId = courses[courseIndex].id;
-         const report = this.courseController.generateCourseReport(courseId);
-
-         // Add more details to the report
-         if (report.course.teacher !== 'Not Assigned') {
-            const teacherId = report.course.teacher.split('(')[1].split(')')[0]; // Extract ID from display string
-            const teacher = this.teacherController.getTeacherById(teacherId);
-            if (teacher) {
-               report.teacherDetails = {
-                  name: teacher.name,
-                  department: teacher.department,
-                  subjects: teacher.subjects
-               };
-            }
-         }
-
-         // Display the report with enhanced information
-         this.view.displayEnhancedCourseReport(report);
-
-      } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
-      }
-
-      readlineSync.question('\nPress Enter to continue...');
-   }
-
-   //Implementasi for Summary Course in Enrollment
-   async generateCourseEnrollmentSummary() {
-      clear();
-      this.view.showHeader('Course Enrollment Summary');
-
-      try {
-         // Get all courses
-         const courses = this.courseController.getAllCourses();
-         if (courses.length === 0) {
-            throw new Error("No courses found in the system");
-         }
-
-         // Calculate basic statistics
-         const totalCourses = courses.length;
-         const activeCourses = courses.filter(c => c.status === 'active').length;
-         const totalEnrollments = courses.reduce((sum, course) => sum + course.studentCount, 0);
-         const averageClassSize = totalEnrollments / totalCourses;
-
-         // Group by subject
-         const subjectGroups = {};
-         courses.forEach(course => {
-            if (!subjectGroups[course.subject]) {
-               subjectGroups[course.subject] = {
-                  courses: 0,
-                  students: 0
-               };
-            }
-            subjectGroups[course.subject].courses++;
-            subjectGroups[course.subject].students += course.studentCount;
-         });
-
-         // Display summary
-         console.log(chalk.cyan(`\nAcademic Year: ${this.schoolSystem.academicYear}`));
-         console.log(chalk.cyan(`Report Date: ${new Date().toLocaleDateString()}`));
-
-         console.log(chalk.yellow('\nEnrollment Overview:'));
-         console.log(`Total Courses: ${totalCourses}`);
-         console.log(`Active Courses: ${activeCourses}`);
-         console.log(`Total Enrollments: ${totalEnrollments}`);
-         console.log(`Average Class Size: ${averageClassSize.toFixed(1)} students`);
-
-         // Display courses by enrollment size (descending)
-         console.log(chalk.yellow('\nCourses by Enrollment (Top 5):'));
-         courses
-            .sort((a, b) => b.studentCount - a.studentCount)
-            .slice(0, 5)
-            .forEach((course, index) => {
-               console.log(`${index + 1}. ${course.name} (${course.code}): ${course.studentCount} students`);
-            });
-
-         // Display enrollment by subject
-         console.log(chalk.yellow('\nEnrollment by Subject:'));
-         Object.entries(subjectGroups)
-            .sort((a, b) => b[1].students - a[1].students)
-            .forEach(([subject, data]) => {
-               console.log(`${subject}: ${data.courses} courses, ${data.students} students (${(data.students / totalEnrollments * 100).toFixed(1)}% of total)`);
-            });
-
-         // Check for potential issues
-         console.log(chalk.yellow('\nEnrollment Alerts:'));
-
-         const lowEnrollmentCourses = courses.filter(c => c.status === 'active' && c.studentCount < 5);
-         if (lowEnrollmentCourses.length > 0) {
-            console.log(chalk.red(`${lowEnrollmentCourses.length} active courses have fewer than 5 students enrolled`));
-            lowEnrollmentCourses.forEach(course => {
-               console.log(`- ${course.name} (${course.code}): ${course.studentCount} students`);
-            });
-         } else {
-            console.log(chalk.green('No courses with critically low enrollment'));
-         }
-
-      } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
-      }
-
-      readlineSync.question('\nPress Enter to continue...');
-   }
-
-   // System Overview Report
-   async generateSystemOverview() {
-      clear();
-      this.view.showHeader('System Overview Report');
-
-      try {
-         const students = this.studentController.getAllStudents();
-         const teachers = this.teacherController.getAllTeachers();
-         const courses = this.courseController.getAllCourses();
-
-         console.log(chalk.cyan(`\nSchool: ${this.schoolSystem.schoolName}`));
-         console.log(chalk.cyan(`Academic Year: ${this.schoolSystem.academicYear}`));
-         console.log(chalk.cyan(`Report Date: ${new Date().toLocaleDateString()}`));
-
-         console.log(chalk.yellow('\nSystem Statistics:'));
-         console.log(`Total Students: ${students.length}`);
-         console.log(`Total Teachers: ${teachers.length}`);
-         console.log(`Total Courses: ${courses.length}`);
-         console.log(`Student-Teacher Ratio: ${teachers.length > 0 ? (students.length / teachers.length).toFixed(1) : 'N/A'}`);
-
-         console.log(chalk.yellow('\nEnrollment Summary:'));
-         const activeCourses = courses.filter(c => c.status === 'active');
-         const totalEnrollments = activeCourses.reduce((sum, course) => sum + course.studentCount, 0);
-         console.log(`Active Courses: ${activeCourses.length}`);
-         console.log(`Total Enrollments: ${totalEnrollments}`);
-         console.log(`Average Students per Course: ${activeCourses.length > 0 ? (totalEnrollments / activeCourses.length).toFixed(1) : 'N/A'}`);
-
-         // Display top 3 most popular courses
-         if (activeCourses.length > 0) {
-            console.log(chalk.yellow('\nTop 3 Most Popular Courses:'));
-            activeCourses
-               .sort((a, b) => b.studentCount - a.studentCount)
-               .slice(0, 3)
-               .forEach((course, index) => {
-                  console.log(`${index + 1}. ${course.name} (${course.code}) - ${course.studentCount} students`);
-               });
-         }
-
-         // Display department distribution
-         if (teachers.length > 0) {
-            console.log(chalk.yellow('\nTeacher Department Distribution:'));
-            const departments = {};
-            teachers.forEach(teacher => {
-               if (!departments[teacher.department]) {
-                  departments[teacher.department] = 0;
-               }
-               departments[teacher.department]++;
-            });
-
-            Object.entries(departments)
-               .sort((a, b) => b[1] - a[1])
-               .forEach(([dept, count]) => {
-                  console.log(`${dept}: ${count} teachers (${((count / teachers.length) * 100).toFixed(1)}%)`);
-               });
-         }
-
-      } catch (error) {
-         console.log(chalk.red(`\nError: ${error.message}`));
-      }
-
-      readlineSync.question('\nPress Enter to continue...');
-   }
-   //END - Controller Input Report
 
    async shutDown() {
       if (this.db) {

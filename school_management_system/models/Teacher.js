@@ -74,7 +74,7 @@ class Teacher extends Person {
          return true;
       }
       return false;
-   }
+   }//❌
 
    assignToCourse(course) {
       if (this._assignedCourses.has(course.id)) {
@@ -110,12 +110,12 @@ class Teacher extends Person {
 
       this._updateTimestamp();
       return true;
-   }
+   }//❌
 
    getTeachingLoad() {
       return Array.from(this._assignedCourses.values())
          .filter(assignment => assignment.status === 'active').length;
-   }
+   }//❌
 
    getTeachingSummary() {
       const activeCourses = this.assignedCourses.filter(assignment => assignment.status === 'active');
@@ -133,7 +133,7 @@ class Teacher extends Person {
          })),
          employmentStatus: this._employmentStatus
       }
-   }
+   }//❌
 }
 export default Teacher;
 

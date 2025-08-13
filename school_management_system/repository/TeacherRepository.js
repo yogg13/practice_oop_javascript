@@ -279,7 +279,7 @@ class TeacherRepository extends BaseRepository {
 
       const result = await this.db.query(query, [teacherId]);
       return result.rows;
-   }
+   }//❌
 
    async getTeacherSubjects(teacherId) {
       const query = `
@@ -289,7 +289,7 @@ class TeacherRepository extends BaseRepository {
 
       const result = await this.db.query(query, [teacherId]);
       return result.rows.map(row => row.subject);
-   }
+   }//❌
 
    _mapToModel(row) {
       const teacher = new Teacher(

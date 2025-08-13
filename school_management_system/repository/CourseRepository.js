@@ -8,36 +8,86 @@ class CourseRepository extends BaseRepository {
    }
 
    async getAllCourses() {
-      const query = `
+      try {
+         const query = `
          SELECT c.*, 
-                (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id AND e.status = 'active') as student_count,
-                t.id as teacher_id, p.name as teacher_name
+                (SELECT COUNT(*) FROM enrollments e WHERE course_id = c.id) as student_count,
+                t.id AS teacher_id, p.name AS teacher_name
          FROM courses c
          LEFT JOIN teachers t ON c.teacher_id = t.id
          LEFT JOIN persons p ON t.id = p.id
          ORDER BY c.name
       `;
 
-      const result = await this.db.query(query);
-      return Promise.all(result.rows.map(async row => this._mapToModel(row)));
-   }
+         const result = await this.db.query(query);
+         return Promise.all(result.rows.map(async row => {
+            const course = await this._mapToModel(row);
+            course._studentCount = parseInt(row.student_count) || 0
+            return course;
+         }))
+      } catch (error) {
+         console.error(`Error getting all courses: ${error.message}`);
+         throw error;
+      }
+   }//✅
 
    async getCourseById(id) {
-      const query = `
-         SELECT c.*, 
-                (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id AND e.status = 'active') as student_count,
-                t.id as teacher_id, p.name as teacher_name
+      try {
+         // Get course data
+         const courseQuery = `
+         SELECT c.*, t.id AS teacher_id, p.name AS teacher_name,
+         (SELECT COUNT(*) FROM enrollments WHERE course_id = c.id) AS student_count
          FROM courses c
          LEFT JOIN teachers t ON c.teacher_id = t.id
          LEFT JOIN persons p ON t.id = p.id
          WHERE c.id = $1
       `;
 
-      const result = await this.db.query(query, [id]);
-      if (result.rows.length === 0) return null;
+         const courseResult = await this.db.query(courseQuery, [id]);
+         if (courseResult.rows.length === 0) return null;
 
-      return this._mapToModel(result.rows[0]);
-   }
+         // Create course model
+         const courseData = courseResult.rows[0];
+         const course = await this._mapToModel(courseData);
+
+         const enrolledStudentsQuery = `
+            SELECT e.*, s.id AS student_id, p.name AS student_name, p.email AS student_email, p.phone AS student_phone, s.grade_level, e.status
+            FROM enrollments e
+            JOIN students s ON e.student_id = s.id
+            JOIN persons p ON s.id = p.id
+            WHERE e.course_id = $1
+         `;
+
+         const enrolledStudentsResult = await this.db.query(enrolledStudentsQuery, [id]);
+         course._enrolledStudents = enrolledStudentsResult.rows.map(row => ({
+            id: row.id,
+            student: {
+               id: row.student_id,
+               name: row.student_name,
+               email: row.student_email,
+               phone: row.student_phone,
+               gradeLevel: row.grade_level
+            },
+            status: row.status,
+            enrolledAt: row.enrolled_at
+         }));
+
+         // Get assignment
+         const assignments = await this.getAssignments(id);
+         course._assignments = assignments || [];
+
+         // Get Exam
+         const exams = await this.getExams(id);
+         course._exams = exams || [];
+
+         return course;
+
+      } catch (error) {
+         console.error(`Error getting course by ID: ${error.message}`);
+         throw error;
+      }
+
+   }//✅
 
    async createCourse(courseData) {
       const courseId = this._generateCourseId();
@@ -65,7 +115,7 @@ class CourseRepository extends BaseRepository {
       ]);
 
       return this._mapToModel(result.rows[0]);
-   }
+   }//✅
 
    async updateCourse(id, updatedData) {
       return await this.db.executeTransaction(async (client) => {
@@ -139,19 +189,28 @@ class CourseRepository extends BaseRepository {
          const result = await client.query(updateQuery, [...values, id]);
          return this._mapToModel(result.rows[0]);
       });
-   }
+   }//✅
 
    async assignTeacher(courseId, teacherId) {
-      const query = `
+      try {
+         const query = `
          UPDATE courses
          SET teacher_id = $1, updated_at = NOW()
          WHERE id = $2
          RETURNING *
       `;
 
-      const result = await this.db.query(query, [teacherId, courseId]);
-      return result.rows[0];
-   }
+         const result = await this.db.query(query, [teacherId, courseId]);
+         if (result.rows.length === 0) {
+            throw new Error(`Course with ID ${courseId} not found`);
+         }
+         console.log(`✅ Teacher assigned to course in database`);
+         return result.rows[0];
+      } catch (error) {
+         console.error(`❌ Error in assignTeacher: ${error.message}`);
+         throw error;
+      }
+   }//✅
 
    async getEnrolledStudents(courseId) {
       const query = `
@@ -165,7 +224,7 @@ class CourseRepository extends BaseRepository {
 
       const result = await this.db.query(query, [courseId]);
       return result.rows;
-   }
+   }//✅
 
    async getAssignments(courseId) {
       const query = `
@@ -176,7 +235,7 @@ class CourseRepository extends BaseRepository {
 
       const result = await this.db.query(query, [courseId]);
       return result.rows;
-   }
+   }//✅
 
    async getExams(courseId) {
       const query = `
@@ -187,7 +246,7 @@ class CourseRepository extends BaseRepository {
 
       const result = await this.db.query(query, [courseId]);
       return result.rows;
-   }
+   }//✅
 
    async _mapToModel(row) {
       const course = new Course(
@@ -209,29 +268,34 @@ class CourseRepository extends BaseRepository {
       course._updatedAt = row.updated_at;
 
       // Add enrolled students (placeholder, will be populated when needed)
-      // course.studentCount = row.student_count || 0;
+      course.studentCount = row.student_count || 0;
 
       // Add teacher if exists
       // This is a placeholder, the actual teacher object would be set separately
       if (row.teacher_id) {
-         course._teacherId = row.teacher_id;
-         course._teacherName = row.teacher_name;
+         course._teacherId = row.teacher_id || 'Unknown Teacher';
+         course._teacherName = row.teacher_name || 'Unknown Teacher';
       }
 
       // Load enrolled students, assignments, and exams
-      try {
-         // Load assignments
-         const assignments = await this.getAssignments(row.id);
-         course._assignments = assignments || [];
+      // try {
+      //    // Load assignments
+      //    const assignments = await this.getAssignments(row.id);
+      //    course._assignments = assignments || [];
 
-         // Load exams
-         const exams = await this.getExams(row.id);
-         course._exams = exams || [];
-      } catch (error) {
-         console.error(`Error loading course details: ${error.message}`);
-         course._assignments = [];
-         course._exams = [];
-      }
+      //    // Load exams
+      //    const exams = await this.getExams(row.id);
+      //    course._exams = exams || [];
+      // } catch (error) {
+      //    console.error(`Error loading course details: ${error.message}`);
+      //    course._assignments = [];
+      //    course._exams = [];
+      // }
+
+      // Initialize collections
+      course._enrolledStudents = [];
+      course._assignments = [];
+      course._exams = [];
       return course;
    }
 

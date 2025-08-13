@@ -20,17 +20,57 @@ class StudentRespository extends BaseRepository {
    }//✅
 
    async getStudentById(id) {
-      const query = `
+      try {
+         const studentQuery = `
          SELECT p.*, s.grade_level, s.academic_status, s.parent_name, s.parent_phone
          FROM students s
          JOIN persons p ON p.id = s.id
          WHERE s.id = $1
       `;
 
-      const result = await this._db.query(query, [id]);
-      if (result.rows.length === 0) return null;
+         const studentResult = await this._db.query(studentQuery, [id]);
+         if (studentResult.rows.length === 0) return null;
 
-      return this._mapToModel(result.rows[0]);
+         const student = this._mapToModel(studentResult.rows[0]);
+
+         // Load enrolled courses
+         const coursesQuery = `
+         SELECT e.*, c.id as course_id, c.name as course_name, c.code as course_code, 
+                c.subject, c.status as course_status, e.status as enrollment_status,
+                e.enrolled_at
+         FROM enrollments e
+         JOIN courses c ON e.course_id = c.id
+         WHERE e.student_id = $1
+      `;
+
+         const coursesResult = await this._db.query(coursesQuery, [id]);
+
+         // Map each enrollment to proper structure for student model
+         student._enrolledCourses = new Map();
+
+         coursesResult.rows.forEach(enrollment => {
+            // Create a simplified course object
+            const course = {
+               id: enrollment.course_id,
+               name: enrollment.course_name,
+               code: enrollment.course_code,
+               subject: enrollment.subject,
+               status: enrollment.course_status
+            };
+
+            // Add to student's enrolledCourses map with course_id as key
+            student._enrolledCourses.set(enrollment.course_id, {
+               id: enrollment.id,
+               course: course,
+               status: enrollment.enrollment_status,
+               enrolledAt: new Date(enrollment.enrolled_at)
+            });
+         });
+         return student;
+      } catch (error) {
+         console.error(`Error fetching student with ID ${id}:`, error);
+         throw error;
+      }
    }//✅
 
    async createStudent(studentData) {
@@ -176,7 +216,7 @@ class StudentRespository extends BaseRepository {
 
       const result = await this._db.query(query, [studentId]);
       return result.rows;
-   }
+   }//❌
 
    async getStudentGrades(studentId, courseId = null) {
       let query = `
@@ -195,7 +235,7 @@ class StudentRespository extends BaseRepository {
 
       const result = await this._db.query(query, params);
       return result.rows;
-   }
+   }//❌
 
    _mapToModel(row) {
       const student = new Student(
@@ -203,7 +243,7 @@ class StudentRespository extends BaseRepository {
          row.email,
          row.phone,
          row.address,
-         row.birth_date,
+         new Date(row.birth_date),
          row.grade_level,
          {
             name: row.parent_name,
@@ -216,6 +256,12 @@ class StudentRespository extends BaseRepository {
       student._academicStatus = row.academic_status;
       student._createdAt = row.created_at;
       student._updatedAt = row.updated_at;
+
+      // Initialize maps if they don't exist
+      student._enrolledCourses = new Map();
+      student._grades = new Map();
+      student._attendance = new Map();
+      student._achievements = [];
 
       return student;
    }

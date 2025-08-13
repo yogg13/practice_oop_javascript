@@ -103,7 +103,7 @@ class EnrollmentRepository extends BaseRepository {
       }
 
       return result.rows[0];
-   }
+   }//❌
 
    async getStudentGrades(studentId, courseId) {
       const query = `

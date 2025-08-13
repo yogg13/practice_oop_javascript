@@ -93,7 +93,7 @@ class Assignment {
 
       this._submissions.set(studentId, submission);
       return submission;
-   }
+   }//❌
 
    gradeAssignment(studentId, score) {
       const submission = this._submissions.get(studentId);
@@ -110,7 +110,7 @@ class Assignment {
       submission.status = 'graded';
 
       return submission;
-   }
+   }//❌
 
    getAverageScore() {
       const gradedAssignment = Array.from(this._submissions.values())
@@ -120,7 +120,7 @@ class Assignment {
 
       const totalScore = gradedAssignment.reduce((sum, sub) => sum + sub.score, 0);
       return totalScore / gradedAssignment.length;
-   }
+   }//❌
 }
 
 export default Assignment;

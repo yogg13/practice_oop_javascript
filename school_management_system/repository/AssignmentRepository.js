@@ -116,22 +116,64 @@ class AssignmentRepository extends BaseRepository {
       }
    }
 
-   async gradeAssignment(assignmentId, studentId, score) {
+   async getStudentSubmission(assignmentId, studentId) {
       const query = `
+      SELECT * FROM assignment_submissions
+      WHERE assignment_id = $1 AND student_id = $2
+   `;
+
+      const result = await this.db.query(query, [assignmentId, studentId]);
+      return result.rows[0];
+   }// New added
+
+   async createSubmission(submissionData) {
+      const query = `
+      INSERT INTO assignment_submissions 
+      (assignment_id, student_id, content, submitted_at, status)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+   `;
+
+      const values = [
+         submissionData.assignment_id,
+         submissionData.student_id,
+         submissionData.content,
+         submissionData.submitted_at,
+         submissionData.status
+      ];
+
+      const result = await this.db.query(query, values);
+      return result.rows[0];
+   }// New added
+
+   async gradeAssignment(assignmentId, studentId, score) {
+      // Cek apakah submission sudah ada
+      const submission = await this.getStudentSubmission(assignmentId, studentId);
+
+      if (submission) {
+         // Update nilai pada submission yang sudah ada
+         const updateQuery = `
          UPDATE assignment_submissions
-         SET score = $1, graded_at = NOW(), status = 'graded'
+         SET score = $1, status = 'graded', graded_at = NOW()
          WHERE assignment_id = $2 AND student_id = $3
          RETURNING *
       `;
 
-      const result = await this.db.query(query, [score, assignmentId, studentId]);
+         const result = await this.db.query(updateQuery, [score, assignmentId, studentId]);
+         return result.rows[0];
+      } else {
+         // Buat submission baru dengan nilai
+         const insertQuery = `
+         INSERT INTO assignment_submissions
+         (assignment_id, student_id, score, submission_date, status, graded_at)
+         VALUES ($1, $2, $3, NOW(), 'graded', NOW())
+         RETURNING *
+      `;
 
-      if (result.rows.length === 0) {
-         throw new Error(`Submission not found for student ${studentId} on assignment ${assignmentId}`);
+         const result = await this.db.query(insertQuery, [assignmentId, studentId, score]);
+         return result.rows[0];
       }
-
-      return result.rows[0];
-   }
+   }// New added
 
    _mapToModel(row) {
       const assignment = new Assignment(

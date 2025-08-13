@@ -16,8 +16,41 @@ class ExamRepository extends BaseRepository {
       const result = await this.db.query(query, [id]);
       if (result.rows.length === 0) return null;
 
-      return this._mapToModel(result.rows[0]);
+      return result.rows[0];
    }
+
+   async recordExamGrade(examId, studentId, score) {
+      // Cek apakah hasil exam sudah ada
+      const checkQuery = `
+      SELECT * FROM exam_results
+      WHERE exam_id = $1 AND student_id = $2
+   `;
+
+      const checkResult = await this.db.query(checkQuery, [examId, studentId]);
+
+      if (checkResult.rows.length > 0) {
+         // Update hasil exam yang sudah ada
+         const updateQuery = `
+         UPDATE exam_results
+         SET score = $1
+         WHERE exam_id = $2 AND student_id = $3
+         RETURNING *
+      `;
+
+         const updateResult = await this.db.query(updateQuery, [score, examId, studentId]);
+         return updateResult.rows[0];
+      } else {
+         // Buat hasil exam baru
+         const insertQuery = `
+         INSERT INTO exam_results (exam_id, student_id, score)
+         VALUES ($1, $2, $3   )
+         RETURNING *
+      `;
+
+         const insertResult = await this.db.query(insertQuery, [examId, studentId, score]);
+         return insertResult.rows[0];
+      }
+   }//New added
 
    async getExamsByCourse(courseId) {
       const query = `
@@ -70,7 +103,7 @@ class ExamRepository extends BaseRepository {
       return result.rows;
    }
 
-   async recordResult(examId, studentId, score, startTime, endTime) {
+   async recordResult(examId, studentId, score) {
       // Check if result already exists
       const checkQuery = `
          SELECT * FROM exam_results
@@ -83,14 +116,13 @@ class ExamRepository extends BaseRepository {
          // Update existing result
          const updateQuery = `
             UPDATE exam_results
-            SET score = $1, start_time = $2, end_time = $3, 
-                duration = EXTRACT(EPOCH FROM $3::timestamp - $2::timestamp)::integer / 60
-            WHERE exam_id = $4 AND student_id = $5
+            SET score = $1
+            WHERE exam_id = $2 AND student_id = $3
             RETURNING *
          `;
 
          const result = await this.db.query(updateQuery, [
-            score, startTime, endTime, examId, studentId
+            score, examId, studentId
          ]);
 
          return result.rows[0];
@@ -98,16 +130,14 @@ class ExamRepository extends BaseRepository {
          // Create new result
          const insertQuery = `
             INSERT INTO exam_results (
-               exam_id, student_id, score, start_time, end_time, 
-               duration
+                  exam_id, student_id, score
             )
-            VALUES ($1, $2, $3, $4, $5, 
-                    EXTRACT(EPOCH FROM $5::timestamp - $4::timestamp)::integer / 60)
+            VALUES ($1, $2, $3)
             RETURNING *
          `;
 
          const result = await this.db.query(insertQuery, [
-            examId, studentId, score, startTime, endTime
+            examId, studentId, score
          ]);
 
          return result.rows[0];

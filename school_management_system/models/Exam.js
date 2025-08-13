@@ -76,7 +76,7 @@ class Exam {
       return `EXM-${Math.random().toString(36).substring(2, 9)}`;
    }
 
-   recordResult(studentId, score, startTime, endTime) {
+   recordResult(studentId, score) {
       if (this._status !== 'in_progress' && this._status !== 'completed') {
          throw new Error("Can't record result for this exam status");
       }
@@ -87,37 +87,10 @@ class Exam {
       const result = {
          studentId: studentId,
          score: score,
-         startTime: new Date(startTime),
-         endTime: new Date(endTime),
-         duration: Math.floor((new Date(endTime) - new Date(startTime)) / (1000 * 60)), // in minutes
       }
       this._results.set(studentId, result);
       return result;
    }
-
-   /*
-   getAverageScore() {
-      if (this._results.size === 0) return 0;
-
-      const totalScore = Array.from(this._results.values())
-         .reduce((sum, result) => sum + result.score, 0);
-
-      return totalScore / this._results.size;
-   }
-   */
-
-   /*
-
-   getPassingRate(passingScore = this._maxScore * 0.6) {
-      if (this._results.size === 0) return 0;
-
-      const passedCount = Array.from(this._results.values())
-         .filter(result => result.score >= passingScore).length;
-
-      return (passedCount / this._results.size) * 100;
-   }
-   */
-
 
    getExamStats() {
       const scores = Array.from(this._results.values()).map(result => result.score);
@@ -139,7 +112,7 @@ class Exam {
          lowestScore: Math.min(...scores),
          passingRate: this.getPassingRate()
       };
-   }
+   }//❌
 }
 
 export default Exam;

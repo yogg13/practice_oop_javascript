@@ -1,10 +1,9 @@
 class EnrollmentController {
-   constructor(enrollmentRepository, studentRepository, courseRepository, assignmentRepository, examRepository) {
+   constructor(enrollmentRepository, studentRepository, courseRepository, teacherRepository) {
       this._enrollmentRepository = enrollmentRepository;
       this._studentRepository = studentRepository;
       this._courseRepository = courseRepository;
-      this._assignmentRepository = assignmentRepository;
-      this._examRepository = examRepository;
+      this._teacherRepository = teacherRepository;
    }
 
    async enrollStudentInCourse(studentId, courseId) {
@@ -22,9 +21,9 @@ class EnrollmentController {
          }
 
          // Enroll student
-         await this._enrollmentRepository.enrollStudent(studentId, courseId);
-         console.log(`✅ Student ${student.name} enrolled in ${course.name}`);
-         return true;
+         const enrollment = await this._enrollmentRepository.enrollStudent(studentId, courseId);
+         // console.log(`✅ Student ${student.name} enrolled in ${course.name}`);
+         return enrollment;
       } catch (error) {
          console.error(`❌ Failed to enroll student: ${error.message}`);
          throw error;
@@ -38,6 +37,28 @@ class EnrollmentController {
          return true;
       } catch (error) {
          console.error(`❌ Failed to drop student: ${error.message}`);
+         throw error;
+      }
+   }
+
+   async assignTeacherToCourse(teacherId, courseId) {
+      try {
+         const teacher = await this._teacherRepository.getTeacherById(teacherId);
+         if (!teacher) {
+            throw new Error(`Teacher with ID ${teacherId} not found`);
+         }
+
+         const course = await this._courseRepository.getCourseById(courseId);
+         if (!course) {
+            throw new Error(`Course with ID ${courseId} not found`);
+         }
+
+         // Assign teacher to course
+         await this._courseRepository.assignTeacher(courseId, teacherId);
+         console.log(`✅ Teacher ${teacher.name} assigned to ${course.name}`);
+         return true;
+      } catch (error) {
+         console.error(`❌ Failed to assign teacher to course: ${error.message}`);
          throw error;
       }
    }
